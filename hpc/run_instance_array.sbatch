@@ -2,7 +2,7 @@
 #SBATCH --partition=compute
 #SBATCH --job-name=misaco
 #SBATCH --output=logs/%x-%A_%a.out
-#SBATCH --time=48:00:00
+#SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
@@ -40,6 +40,12 @@ export STATS_NAME="${STATS_NAME:-stats}"
 export MISACO_STATS_ROOT="${MISACO_STATS_ROOT:-${MISACO_ALGORITHM}/${STATS_NAME}}"
 export MISACO_PLATEMO_DIR="${MISACO_PLATEMO_DIR:-../PlatEMO/PlatEMO}"
 export MISACO_ARRAY_MODE="${MISACO_ARRAY_MODE:-seed}"
+
+echo "Working directory: $PWD"
+echo "MISACO_ALGORITHM=$MISACO_ALGORITHM"
+echo "STATS_NAME=$STATS_NAME"
+echo "MISACO_STATS_ROOT=$MISACO_STATS_ROOT"
+echo "MISACO_PLATEMO_DIR=$MISACO_PLATEMO_DIR"
 
 start_delay="${START_DELAY_SECONDS:-90}"
 if [[ "$start_delay" =~ ^[0-9]+$ ]] && (( start_delay > 0 )); then

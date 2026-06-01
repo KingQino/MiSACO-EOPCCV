@@ -190,6 +190,14 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.RBF_RMSE = RunSummary.RBF_RMSE;
     summary.RF_MAE = RunSummary.RF_MAE;
     summary.RF_RMSE = RunSummary.RF_RMSE;
+    summary.EnsembleEvaluations = GetSummaryField(RunSummary,'EnsembleEvaluations');
+    summary.EnsembleImprovements = GetSummaryField(RunSummary,'EnsembleImprovements');
+    summary.ET_MAE = GetSummaryField(RunSummary,'ET_MAE');
+    summary.ET_RMSE = GetSummaryField(RunSummary,'ET_RMSE');
+    summary.GBDT_MAE = GetSummaryField(RunSummary,'GBDT_MAE');
+    summary.GBDT_RMSE = GetSummaryField(RunSummary,'GBDT_RMSE');
+    summary.Ensemble_MAE = GetSummaryField(RunSummary,'Ensemble_MAE');
+    summary.Ensemble_RMSE = GetSummaryField(RunSummary,'Ensemble_RMSE');
     summary.AlignmentSamples = GetSummaryField(RunSummary,'AlignmentSamples');
     summary.AlignmentGuidedEvaluations = GetSummaryField(RunSummary,'AlignmentGuidedEvaluations');
     summary.AlignmentFallbackEvaluations = GetSummaryField(RunSummary,'AlignmentFallbackEvaluations');
@@ -275,6 +283,14 @@ function summary = EmptySeedSummary()
         'RBF_RMSE', NaN, ...
         'RF_MAE', NaN, ...
         'RF_RMSE', NaN, ...
+        'EnsembleEvaluations', NaN, ...
+        'EnsembleImprovements', NaN, ...
+        'ET_MAE', NaN, ...
+        'ET_RMSE', NaN, ...
+        'GBDT_MAE', NaN, ...
+        'GBDT_RMSE', NaN, ...
+        'Ensemble_MAE', NaN, ...
+        'Ensemble_RMSE', NaN, ...
         'AlignmentSamples', NaN, ...
         'AlignmentGuidedEvaluations', NaN, ...
         'AlignmentFallbackEvaluations', NaN, ...
@@ -450,6 +466,22 @@ function WriteSeedSummaryFile(filePath, RunSummary)
     fprintf(fileID,'RBF_RMSE %.12g\n',RunSummary.RBF_RMSE);
     fprintf(fileID,'RF_MAE %.12g\n',RunSummary.RF_MAE);
     fprintf(fileID,'RF_RMSE %.12g\n',RunSummary.RF_RMSE);
+    if isfield(RunSummary,'EnsembleEvaluations')
+        fprintf(fileID,'EnsembleEvaluations %d\n',RunSummary.EnsembleEvaluations);
+        fprintf(fileID,'EnsembleImprovements %d\n',RunSummary.EnsembleImprovements);
+    end
+    if isfield(RunSummary,'ET_MAE')
+        fprintf(fileID,'ET_MAE %.12g\n',RunSummary.ET_MAE);
+        fprintf(fileID,'ET_RMSE %.12g\n',RunSummary.ET_RMSE);
+    end
+    if isfield(RunSummary,'GBDT_MAE')
+        fprintf(fileID,'GBDT_MAE %.12g\n',RunSummary.GBDT_MAE);
+        fprintf(fileID,'GBDT_RMSE %.12g\n',RunSummary.GBDT_RMSE);
+    end
+    if isfield(RunSummary,'Ensemble_MAE')
+        fprintf(fileID,'Ensemble_MAE %.12g\n',RunSummary.Ensemble_MAE);
+        fprintf(fileID,'Ensemble_RMSE %.12g\n',RunSummary.Ensemble_RMSE);
+    end
     if isfield(RunSummary,'AlignmentSamples')
         fprintf(fileID,'AlignmentSamples %d\n',RunSummary.AlignmentSamples);
         fprintf(fileID,'AlignmentGuidedEvaluations %d\n',RunSummary.AlignmentGuidedEvaluations);

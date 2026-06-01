@@ -43,8 +43,9 @@ bash hpc/submit_array.sh
 ```
 
 Use a new `STATS_NAME` for each experiment batch, for example `stats_01`,
-`stats_02`, or `stats_rastrigin_ablation`. If `MISACO_STATS_ROOT` is set,
-it overrides `<Algorithm>/<STATS_NAME>` completely.
+`stats_02`, or `stats_rastrigin_ablation`. By default, results go to
+`<Algorithm>/<STATS_NAME>`. To intentionally use a custom path, set both
+`MISACO_STATS_ROOT=/path/to/results` and `MISACO_USE_CUSTOM_STATS_ROOT=1`.
 
 The submit script runs a small MATLAB preflight job first. If MATLAB fails
 while installing or starting MathWorks Service Host, the array job will not
@@ -66,6 +67,16 @@ Recommended AGESV2 command:
 
 ```bash
 MISACO_ALGORITHM=AGESV2 \
+STATS_NAME=stats_01 \
+MAX_PARALLEL=50 \
+MEM_PER_CPU=3G \
+bash hpc/submit_array.sh
+```
+
+Recommended AGESV3 command:
+
+```bash
+MISACO_ALGORITHM=AGESV3 \
 STATS_NAME=stats_01 \
 MAX_PARALLEL=50 \
 MEM_PER_CPU=3G \

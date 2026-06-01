@@ -22,10 +22,15 @@ export MISACO_SAVE_DETAILED_LOGS="${MISACO_SAVE_DETAILED_LOGS:-0}"
 export MISACO_ALGORITHM="${MISACO_ALGORITHM:-MiSACO}"
 export STATS_NAME="$stats_name"
 job_name="${JOB_NAME:-$MISACO_ALGORITHM}"
-if [[ -z "${MISACO_STATS_ROOT:-}" ]]; then
-    export MISACO_STATS_ROOT="$repo_root/$MISACO_ALGORITHM/$stats_name"
+existing_stats_root="${MISACO_STATS_ROOT:-}"
+if [[ -n "$existing_stats_root" && "${MISACO_USE_CUSTOM_STATS_ROOT:-0}" == "1" ]]; then
+    export MISACO_STATS_ROOT="$existing_stats_root"
 else
-    export MISACO_STATS_ROOT
+    if [[ -n "$existing_stats_root" ]]; then
+        echo "Ignoring inherited MISACO_STATS_ROOT=$existing_stats_root" >&2
+        echo "Set MISACO_USE_CUSTOM_STATS_ROOT=1 to submit with a custom stats root." >&2
+    fi
+    export MISACO_STATS_ROOT="$repo_root/$MISACO_ALGORITHM/$stats_name"
 fi
 export MISACO_PLATEMO_DIR="${MISACO_PLATEMO_DIR:-$repo_root/../PlatEMO/PlatEMO}"
 export MISACO_ARRAY_MODE="${MISACO_ARRAY_MODE:-seed}"
@@ -37,6 +42,15 @@ if [[ ! -d "$MISACO_PLATEMO_DIR" ]]; then
     echo "Set MISACO_PLATEMO_DIR=/path/to/PlatEMO/PlatEMO and resubmit." >&2
     exit 1
 fi
+
+algorithm_file="$repo_root/$MISACO_ALGORITHM/$MISACO_ALGORITHM.m"
+if [[ ! -f "$algorithm_file" ]]; then
+    echo "Algorithm file not found: $algorithm_file" >&2
+    echo "Make sure the $MISACO_ALGORITHM directory has been uploaded before submitting." >&2
+    exit 1
+fi
+
+mkdir -p "$MISACO_STATS_ROOT"
 
 if [[ "$MISACO_ARRAY_MODE" == "seed" ]]; then
     array_max=$((30 * MISACO_MAX_TRIALS - 1))
@@ -60,6 +74,7 @@ if [[ "${SUBMIT_PREFLIGHT:-1}" == "1" ]]; then
         --mem-per-cpu="$mem_per_cpu" \
         --output="$log_dir/%x-%j.out" \
         --chdir="$repo_root" \
+        --export=ALL \
         "$preflight_script")
     dependency_args=(--dependency="afterok:$preflight_job_id")
     echo "Submitted MATLAB preflight job: $preflight_job_id"
@@ -74,6 +89,7 @@ array_job_id=$(sbatch \
     --mem-per-cpu="$mem_per_cpu" \
     --output="$log_dir/%x-%A_%a.out" \
     --chdir="$repo_root" \
+    --export=ALL \
     "$sbatch_script")
 
 echo "Submitted $MISACO_ALGORITHM array job: $array_job_id"
@@ -100,6 +116,7 @@ if [[ "${SUBMIT_COLLECT:-1}" == "1" ]]; then
         --job-name="${job_name}-collect" \
         --output="$log_dir/%x-%j.out" \
         --chdir="$repo_root" \
+        --export=ALL \
         "$collect_script")
     echo "Submitted collect job: $collect_job_id"
 fi
