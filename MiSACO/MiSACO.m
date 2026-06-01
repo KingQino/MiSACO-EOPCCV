@@ -24,7 +24,10 @@ classdef MiSACO < ALGORITHM
             currentBest = inf;
             runStart    = tic;
             algorithmFile = which(class(Algorithm));
-            historyFile   = fullfile(fileparts(fileparts(algorithmFile)),'history.mat');
+            historyFile = getenv('MISACO_HISTORY_FILE');
+            if isempty(historyFile)
+                historyFile = fullfile(fileparts(fileparts(algorithmFile)),'history.mat');
+            end
 
             try
                 %% Generate random population

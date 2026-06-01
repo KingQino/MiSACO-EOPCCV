@@ -1,2 +1,7 @@
 .DS_Store
 *.mat
+
+# Generated HPC experiment outputs
+MiSACO/stats/*
+!MiSACO/stats/README.md
+logs/
