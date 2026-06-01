@@ -2,11 +2,12 @@
 #SBATCH --partition=compute
 #SBATCH --job-name=misaco
 #SBATCH --output=logs/%x-%A_%a.out
-#SBATCH --time=04:00:00
+#SBATCH --time=02:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=32
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=3G
+#SBATCH --mem-per-cpu=4G
 
 set -euo pipefail
 
@@ -52,4 +53,4 @@ if [[ "$start_delay" =~ ^[0-9]+$ ]] && (( start_delay > 0 )); then
     sleep $(( SLURM_ARRAY_TASK_ID % start_delay ))
 fi
 
-matlab -nodisplay -nosplash -nodesktop -singleCompThread -batch "RunEOPCCVHPC()"
+matlab -nodisplay -nosplash -nodesktop -singleCompThread -batch "RunEOPCCVHPC(); exit"

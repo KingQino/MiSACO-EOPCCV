@@ -30,4 +30,4 @@ export MISACO_STATS_ROOT="${MISACO_STATS_ROOT:-MiSACO/stats}"
 echo "Working directory: $PWD"
 echo "MISACO_STATS_ROOT=$MISACO_STATS_ROOT"
 
-matlab -nodisplay -nosplash -nodesktop -singleCompThread -batch "CollectEOPCCVResults(getenv('MISACO_STATS_ROOT'))"
+matlab -nodisplay -nosplash -nodesktop -singleCompThread -batch "CollectEOPCCVResults(getenv('MISACO_STATS_ROOT')); exit"

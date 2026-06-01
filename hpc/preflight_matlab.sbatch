@@ -6,7 +6,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=3G
+#SBATCH --mem-per-cpu=4G
 
 set -euo pipefail
 
@@ -28,4 +28,4 @@ export MATLAB_USE_DISPLAY=0
 export MATLAB_DISABLE_SERVICEHOST=1
 export MATHWORKS_SERVICEHOST_DISABLE=1
 
-matlab -nodisplay -nosplash -nodesktop -singleCompThread -batch "fprintf('MATLAB preflight OK\\n');"
+matlab -nodisplay -nosplash -nodesktop -singleCompThread -batch "fprintf('MATLAB preflight OK\\n'); exit"

@@ -19,26 +19,28 @@ MISACO_PLATEMO_DIR=/path/to/PlatEMO/PlatEMO \
 MISACO_MAX_FE=600 \
 MISACO_MAX_TRIALS=10 \
 STATS_NAME=stats_01 \
-MAX_PARALLEL=50 \
-MEM_PER_CPU=3G \
+MAX_PARALLEL=100 \
+MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
 ```
 
-With the defaults, up to 30 seed tasks run at once and each task requests
-1 CPU core and 3G memory per CPU. This is seed-level parallelism: one array
+With the defaults, up to 100 seed tasks run at once and each task requests
+1 CPU core and 4G memory per CPU. This is seed-level parallelism: one array
 task runs one `(problem, seed)` pair. Set `MAX_PARALLEL` higher if the
-cluster allocation permits, or set `MEM_PER_CPU=4G`/`5G` if your cluster
+cluster allocation permits, or set `MEM_PER_CPU=5G`/`6G` if your cluster
 reports MATLAB memory pressure. The submit script caps requested concurrency
-at `MAX_PARALLEL_CAP=100` by default, so `MAX_PARALLEL=50` is allowed without
-an extra override.
+at `MAX_PARALLEL_CAP=100` by default. Worker jobs request
+`--ntasks-per-node=32` and a two-hour wall time by default. Override the
+per-node task hint with `NTASKS_PER_NODE=...` if your cluster recommends a
+different packing level.
 
 To run the AGES variant instead of the MiSACO baseline:
 
 ```bash
 MISACO_ALGORITHM=AGES \
 STATS_NAME=stats_01 \
-MAX_PARALLEL=50 \
-MEM_PER_CPU=3G \
+MAX_PARALLEL=100 \
+MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
 ```
 
@@ -58,8 +60,8 @@ Recommended AGES command:
 ```bash
 MISACO_ALGORITHM=AGES \
 STATS_NAME=stats_02 \
-MAX_PARALLEL=50 \
-MEM_PER_CPU=3G \
+MAX_PARALLEL=100 \
+MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
 ```
 
@@ -68,8 +70,8 @@ Recommended AGESV2 command:
 ```bash
 MISACO_ALGORITHM=AGESV2 \
 STATS_NAME=stats_01 \
-MAX_PARALLEL=50 \
-MEM_PER_CPU=3G \
+MAX_PARALLEL=100 \
+MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
 ```
 
@@ -78,8 +80,8 @@ Recommended AGESV3 command:
 ```bash
 MISACO_ALGORITHM=AGESV3 \
 STATS_NAME=stats_01 \
-MAX_PARALLEL=50 \
-MEM_PER_CPU=3G \
+MAX_PARALLEL=100 \
+MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
 ```
 
@@ -88,9 +90,18 @@ Recommended AGESV4 command:
 ```bash
 MISACO_ALGORITHM=AGESV4 \
 STATS_NAME=stats_01 \
-MAX_PARALLEL=50 \
-MEM_PER_CPU=3G \
+MAX_PARALLEL=100 \
+MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
+```
+
+Download results without creating an extra nested `stats_01` directory by
+using a trailing slash on the source path:
+
+```bash
+rsync -av --progress \
+  exx866@login.hpc.qmul.ac.uk:/data/home/exx866/Matlab/MiSACO-EOPCCV/AGESV4/stats_01/ \
+  ./AGESV4/stats_01/
 ```
 
 The submit script also starts a dependent collect job that writes:
