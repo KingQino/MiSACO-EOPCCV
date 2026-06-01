@@ -18,6 +18,7 @@ export MISACO_OFFSPRING_N="${MISACO_OFFSPRING_N:-100}"
 export MISACO_SAVE_DETAILED_LOGS="${MISACO_SAVE_DETAILED_LOGS:-0}"
 export MISACO_STATS_ROOT="${MISACO_STATS_ROOT:-$repo_root/MiSACO/stats}"
 export MISACO_PLATEMO_DIR="${MISACO_PLATEMO_DIR:-$repo_root/../PlatEMO/PlatEMO}"
+export MISACO_ARRAY_MODE="${MISACO_ARRAY_MODE:-seed}"
 
 if [[ ! -d "$MISACO_PLATEMO_DIR" ]]; then
     echo "PlatEMO directory not found: $MISACO_PLATEMO_DIR" >&2
@@ -25,9 +26,15 @@ if [[ ! -d "$MISACO_PLATEMO_DIR" ]]; then
     exit 1
 fi
 
+if [[ "$MISACO_ARRAY_MODE" == "seed" ]]; then
+    array_max=$((30 * MISACO_MAX_TRIALS - 1))
+else
+    array_max=29
+fi
+
 array_job_id=$(sbatch \
     --parsable \
-    --array="0-29%$max_parallel" \
+    --array="0-$array_max%$max_parallel" \
     --job-name="$job_name" \
     --output="$log_dir/%x-%A_%a.out" \
     --chdir="$repo_root" \
@@ -37,6 +44,7 @@ echo "Submitted MiSACO array job: $array_job_id"
 echo "  Problems: F1-F30"
 echo "  Seeds per problem: $MISACO_MAX_TRIALS"
 echo "  Max FE: $MISACO_MAX_FE"
+echo "  Array mode: $MISACO_ARRAY_MODE"
 echo "  Max parallel array tasks: $max_parallel"
 echo "  Detailed per-seed logs: $MISACO_SAVE_DETAILED_LOGS"
 echo "  Stats root: $MISACO_STATS_ROOT"

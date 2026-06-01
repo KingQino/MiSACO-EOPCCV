@@ -7,8 +7,9 @@ cd /path/to/MiSACO-and-EOPCCV
 bash hpc/submit_array.sh
 ```
 
-Each array task runs one problem (`F1` to `F30`) for seeds `1..10`.
-Results are written under `MiSACO/stats/F*/seed/`.
+By default, each array task runs one `(problem, seed)` pair. For 30
+problems and 10 seeds, this submits 300 array tasks. Results are written
+under `MiSACO/stats/F*/seed/`.
 
 Useful overrides:
 
@@ -19,6 +20,9 @@ MISACO_MAX_TRIALS=10 \
 MAX_PARALLEL=30 \
 bash hpc/submit_array.sh
 ```
+
+With the defaults, up to 30 seed tasks run at once and each task requests
+1 CPU core. Set `MAX_PARALLEL` higher if the cluster allocation permits.
 
 The submit script also starts a dependent collect job that writes:
 

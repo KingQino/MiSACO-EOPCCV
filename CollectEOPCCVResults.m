@@ -14,15 +14,15 @@ function General = CollectEOPCCVResults(statsRoot)
     for problemId = 1:30
         instanceName = sprintf('F%d',problemId);
         instanceDir  = fullfile(statsRoot,instanceName);
-        statsPath    = fullfile(instanceDir,sprintf('stats.%s.csv',instanceName));
-        if ~isfile(statsPath)
+        if ~isfolder(instanceDir)
             continue;
         end
 
-        T = readtable(statsPath);
+        T = LoadSeedStats(instanceDir,instanceName);
         if isempty(T)
             continue;
         end
+        WriteInstanceStats(instanceDir,instanceName,T);
 
         [minBest,bestIdx] = min(T.BestObjective);
         rows(end+1,:) = { ...
@@ -66,6 +66,92 @@ function General = CollectEOPCCVResults(statsRoot)
     WriteGeneralText(fullfile(statsRoot,'general.txt'),General);
 
     fprintf('Collected %d instance summaries into %s\n',height(General),statsRoot);
+end
+
+
+function T = LoadSeedStats(instanceDir, instanceName)
+    rows = [];
+    seedDirs = dir(instanceDir);
+    seedDirs = seedDirs([seedDirs.isdir]);
+    seedDirs = seedDirs(~ismember({seedDirs.name},{'.','..'}));
+
+    for k = 1:numel(seedDirs)
+        seedName = seedDirs(k).name;
+        if isempty(regexp(seedName,'^\d+$','once'))
+            continue;
+        end
+
+        seed = str2double(seedName);
+        historyFile = fullfile(instanceDir,seedName, ...
+            sprintf('history.%s.seed%d.mat',instanceName,seed));
+        if ~isfile(historyFile)
+            continue;
+        end
+
+        data = load(historyFile,'RunSummary');
+        if ~isfield(data,'RunSummary')
+            continue;
+        end
+
+        rows = [rows; SummaryToRow(data.RunSummary,seed)]; %#ok<AGROW>
+    end
+
+    if isempty(rows)
+        statsPath = fullfile(instanceDir,sprintf('stats.%s.csv',instanceName));
+        if isfile(statsPath)
+            T = readtable(statsPath);
+        else
+            T = table();
+        end
+        return;
+    end
+
+    T = struct2table(rows);
+    T = sortrows(T,'Seed');
+end
+
+
+function row = SummaryToRow(RunSummary, seed)
+    row = struct( ...
+        'Seed', seed, ...
+        'BestObjective', RunSummary.BestObjective, ...
+        'BestFE', RunSummary.BestFE, ...
+        'Runtime', RunSummary.Runtime, ...
+        'TotalFE', RunSummary.TotalFE, ...
+        'RBFEvaluations', RunSummary.RBFEvaluations, ...
+        'RFEvaluations', RunSummary.RFEvaluations, ...
+        'RandomEvaluations', RunSummary.RandomEvaluations, ...
+        'LocalSearchEvaluations', RunSummary.LocalSearchEvaluations, ...
+        'RBFImprovements', RunSummary.RBFImprovements, ...
+        'RFImprovements', RunSummary.RFImprovements, ...
+        'RandomImprovements', RunSummary.RandomImprovements, ...
+        'LocalSearchImprovements', RunSummary.LocalSearchImprovements, ...
+        'RBF_MAE', RunSummary.RBF_MAE, ...
+        'RBF_RMSE', RunSummary.RBF_RMSE, ...
+        'RF_MAE', RunSummary.RF_MAE, ...
+        'RF_RMSE', RunSummary.RF_RMSE);
+end
+
+
+function WriteInstanceStats(instanceDir, instanceName, seedTable)
+    writetable(seedTable, fullfile(instanceDir,sprintf('stats.%s.csv',instanceName)));
+    save(fullfile(instanceDir,sprintf('stats.%s.mat',instanceName)),'seedTable');
+
+    filePath = fullfile(instanceDir,sprintf('stats.%s.txt',instanceName));
+    fileID = fopen(filePath,'w');
+    if fileID == -1
+        error('CollectEOPCCVResults:StatsFileOpenError', ...
+            'Could not open %s for writing.', filePath);
+    end
+    cleaner = onCleanup(@() fclose(fileID));
+    fprintf(fileID,'Instance %s\n',instanceName);
+    fprintf(fileID,'Completed seeds %d\n',height(seedTable));
+    fprintf(fileID,'Min %.12g\n',min(seedTable.BestObjective));
+    fprintf(fileID,'Mean %.12g\n',mean(seedTable.BestObjective));
+    fprintf(fileID,'Std %.12g\n',std(seedTable.BestObjective));
+    fprintf(fileID,'Max %.12g\n',max(seedTable.BestObjective));
+    fprintf(fileID,'MeanRuntime %.6f\n',mean(seedTable.Runtime));
+    clear cleaner;
 end
 
 

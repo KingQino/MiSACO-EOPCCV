@@ -1,4 +1,4 @@
-function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN, offspringN, statsRoot)
+function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN, offspringN, statsRoot, numWorkers)
 %RunEOPCCVExperiment Run one EOPCCV problem for multiple random seeds.
 
     if nargin < 2 || isempty(seeds)
@@ -16,6 +16,9 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
     if nargin < 6 || isempty(statsRoot)
         statsRoot = fullfile(fileparts(mfilename('fullpath')),'MiSACO','stats');
     end
+    if nargin < 7 || isempty(numWorkers)
+        numWorkers = ReadIntegerEnv('MISACO_NUM_WORKERS', 1);
+    end
 
     problemNumber = ParseProblemId(problemId);
     instanceName  = sprintf('F%d',problemNumber);
@@ -31,24 +34,63 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
     EnsureFolder(instanceDir);
 
     saveDetailedLogs = ReadBooleanEnv('MISACO_SAVE_DETAILED_LOGS', false);
-
-    fprintf('Running %s for seeds %s\n', problemClass, mat2str(seeds));
-    fprintf('Detailed CSV/result logs: %d\n', saveDetailedLogs);
-    seedSummaries = repmat(EmptySeedSummary(), numel(seeds), 1);
-
-    for k = 1:numel(seeds)
-        seed = seeds(k);
-        seedDir = fullfile(instanceDir,num2str(seed));
-        EnsureFolder(seedDir);
-        seedSummaries(k) = RunSingleSeed(problemHandle, problemClass, ...
-            instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs);
+    writeInstanceStats = ReadBooleanEnv('MISACO_WRITE_INSTANCE_STATS', true);
+    numWorkers = max(1,min(numWorkers,numel(seeds)));
+    useParallel = numWorkers > 1;
+    if useParallel && ~HasParallelSupport()
+        warning('RunEOPCCVExperiment:NoParallelSupport', ...
+            ['Parallel Computing Toolbox support unavailable. ' ...
+            'Falling back to serial seed execution.']);
+        useParallel = false;
+        numWorkers = 1;
     end
 
-    instanceSummary = WriteInstanceStats(instanceDir, instanceName, seedSummaries);
-    fprintf('Completed %s | best=%.12g mean=%.12g std=%.12g completed=%d\n', ...
-        instanceName, instanceSummary.MinBestObjective, ...
-        instanceSummary.MeanBestObjective, instanceSummary.StdBestObjective, ...
-        instanceSummary.CompletedSeeds);
+    fprintf('Running %s for seeds %s\n', problemClass, mat2str(seeds));
+    fprintf('Seed workers: %d\n', numWorkers);
+    fprintf('Detailed CSV/result logs: %d\n', saveDetailedLogs);
+    fprintf('Write instance stats now: %d\n', writeInstanceStats);
+    seedSummaries = repmat(EmptySeedSummary(), numel(seeds), 1);
+
+    if useParallel
+        pool = EnsureLocalPool(numWorkers);
+        fprintf('Running seeds in parallel with %d worker(s).\n', pool.NumWorkers);
+        parfor k = 1:numel(seeds)
+            seed = seeds(k);
+            seedDir = fullfile(instanceDir,num2str(seed));
+            EnsureFolder(seedDir);
+            seedSummaries(k) = RunSingleSeed(problemHandle, problemClass, ...
+                instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs);
+        end
+    else
+        fprintf('Running seeds serially.\n');
+        for k = 1:numel(seeds)
+            seed = seeds(k);
+            seedDir = fullfile(instanceDir,num2str(seed));
+            EnsureFolder(seedDir);
+            seedSummaries(k) = RunSingleSeed(problemHandle, problemClass, ...
+                instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs);
+        end
+    end
+
+    if writeInstanceStats
+        instanceSummary = WriteInstanceStats(instanceDir, instanceName, seedSummaries);
+        fprintf('Completed %s | best=%.12g mean=%.12g std=%.12g completed=%d\n', ...
+            instanceName, instanceSummary.MinBestObjective, ...
+            instanceSummary.MeanBestObjective, instanceSummary.StdBestObjective, ...
+            instanceSummary.CompletedSeeds);
+    else
+        instanceSummary = struct( ...
+            'Instance', instanceName, ...
+            'CompletedSeeds', numel(seedSummaries), ...
+            'MinBestObjective', min([seedSummaries.BestObjective]), ...
+            'MeanBestObjective', mean([seedSummaries.BestObjective]), ...
+            'StdBestObjective', std([seedSummaries.BestObjective]), ...
+            'MaxBestObjective', max([seedSummaries.BestObjective]), ...
+            'MeanRuntime', mean([seedSummaries.Runtime]), ...
+            'MeanTotalFE', mean([seedSummaries.TotalFE]));
+        fprintf('Completed %s seed task(s); instance stats deferred to collect job.\n', ...
+            instanceName);
+    end
 end
 
 
@@ -214,6 +256,23 @@ function EnsureFolder(folderPath)
 end
 
 
+function value = ReadIntegerEnv(name, defaultValue)
+    rawValue = getenv(name);
+    if isempty(rawValue)
+        value = defaultValue;
+        return;
+    end
+
+    value = str2double(rawValue);
+    if isnan(value) || ~isfinite(value)
+        error('RunEOPCCVExperiment:InvalidIntegerEnv', ...
+            'Environment variable %s must be numeric.', name);
+    end
+
+    value = round(value);
+end
+
+
 function value = ReadBooleanEnv(name, defaultValue)
     rawValue = getenv(name);
     if isempty(rawValue)
@@ -223,6 +282,27 @@ function value = ReadBooleanEnv(name, defaultValue)
 
     rawValue = lower(strtrim(rawValue));
     value = any(strcmp(rawValue,{'1','true','yes','on'}));
+end
+
+
+function tf = HasParallelSupport()
+    tf = exist('gcp','file') == 2 && ...
+        exist('parpool','file') == 2 && ...
+        license('test','Distrib_Computing_Toolbox');
+end
+
+
+function pool = EnsureLocalPool(numWorkers)
+    pool = gcp('nocreate');
+    if isempty(pool)
+        pool = parpool('local',numWorkers);
+        return;
+    end
+
+    if pool.NumWorkers ~= numWorkers
+        delete(pool);
+        pool = parpool('local',numWorkers);
+    end
 end
 
 

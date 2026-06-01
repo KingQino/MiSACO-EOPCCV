@@ -27,27 +27,59 @@ function RunEOPCCVHPC(varargin)
     end
 
     arrayBase   = ReadIntegerEnv('MISACO_ARRAY_BASE', 0);
-    problemIds  = 1:30;
-    problemIndex = arrayTaskId - arrayBase + 1;
-    if problemIndex < 1 || problemIndex > numel(problemIds)
-        error('RunEOPCCVHPC:ArrayIndexOutOfRange', ...
-            'Array task id %d is out of range for base %d and %d problems.', ...
-            arrayTaskId, arrayBase, numel(problemIds));
-    end
-
-    problemId  = problemIds(problemIndex);
     maxTrials  = ReadIntegerEnv('MISACO_MAX_TRIALS', 10);
     maxFE      = ReadIntegerEnv('MISACO_MAX_FE', 600);
     parentN    = ReadIntegerEnv('MISACO_PARENT_N', 60);
     offspringN = ReadIntegerEnv('MISACO_OFFSPRING_N', 100);
     statsRoot  = ReadStringEnv('MISACO_STATS_ROOT', ...
         fullfile(projectRoot,'MiSACO','stats'));
+    arrayMode  = lower(ReadStringEnv('MISACO_ARRAY_MODE','seed'));
+    problemIds = 1:30;
 
-    maxNumCompThreads(1);
-    fprintf('Array task %d selected EOPCCV_F%d\n', arrayTaskId, problemId);
-    fprintf('Stats root: %s\n', statsRoot);
+    switch arrayMode
+        case 'seed'
+            taskIndex = arrayTaskId - arrayBase;
+            totalTasks = numel(problemIds) * maxTrials;
+            if taskIndex < 0 || taskIndex >= totalTasks
+                error('RunEOPCCVHPC:ArrayIndexOutOfRange', ...
+                    'Array task id %d is out of range for %d seed tasks.', ...
+                    arrayTaskId, totalTasks);
+            end
+            problemId = problemIds(floor(taskIndex/maxTrials) + 1);
+            seed = mod(taskIndex,maxTrials) + 1;
+            oldWriteStats = getenv('MISACO_WRITE_INSTANCE_STATS');
+            setenv('MISACO_WRITE_INSTANCE_STATS','0');
+            cleanup = onCleanup(@() setenv('MISACO_WRITE_INSTANCE_STATS',oldWriteStats));
 
-    RunEOPCCVExperiment(problemId, 1:maxTrials, maxFE, parentN, offspringN, statsRoot);
+            maxNumCompThreads(1);
+            fprintf('Array task %d selected EOPCCV_F%d seed %d\n', ...
+                arrayTaskId, problemId, seed);
+            fprintf('Stats root: %s\n', statsRoot);
+            RunEOPCCVExperiment(problemId, seed, maxFE, parentN, offspringN, statsRoot, 1);
+            clear cleanup;
+
+        case 'problem'
+            problemIndex = arrayTaskId - arrayBase + 1;
+            if problemIndex < 1 || problemIndex > numel(problemIds)
+                error('RunEOPCCVHPC:ArrayIndexOutOfRange', ...
+                    'Array task id %d is out of range for base %d and %d problems.', ...
+                    arrayTaskId, arrayBase, numel(problemIds));
+            end
+            problemId = problemIds(problemIndex);
+            numWorkers = ReadIntegerEnv('MISACO_NUM_WORKERS', ...
+                ReadIntegerEnv('SLURM_CPUS_PER_TASK', 1));
+            numWorkers = max(1,min(numWorkers,maxTrials));
+
+            maxNumCompThreads(1);
+            fprintf('Array task %d selected EOPCCV_F%d\n', arrayTaskId, problemId);
+            fprintf('Seeds: 1-%d, workers: %d\n', maxTrials, numWorkers);
+            fprintf('Stats root: %s\n', statsRoot);
+            RunEOPCCVExperiment(problemId, 1:maxTrials, maxFE, parentN, offspringN, statsRoot, numWorkers);
+
+        otherwise
+            error('RunEOPCCVHPC:InvalidArrayMode', ...
+                'MISACO_ARRAY_MODE must be seed or problem, got %s.', arrayMode);
+    end
 end
 
 
