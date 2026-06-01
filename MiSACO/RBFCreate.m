@@ -5,8 +5,12 @@ xmin = min(ax, [], 1);
 xmax = max(ax, [], 1);
 ymin = min(ay, [], 1);
 ymax = max(ay, [], 1);
-ax = 2./(repmat(xmax - xmin + eps, N, 1)) .* (ax - repmat(xmin, N, 1) + eps) - 1;
-ay = 2./(repmat(ymax - ymin + eps, N, 1)) .* (ay - repmat(ymin, N, 1) + eps) - 1;
+xrange = xmax - xmin;
+yrange = ymax - ymin;
+xrange(xrange < eps) = eps;
+yrange(yrange < eps) = eps;
+ax = 2./repmat(xrange, N, 1) .* (ax - repmat(xmin, N, 1)) - 1;
+ay = 2./repmat(yrange, N, 1) .* (ay - repmat(ymin, N, 1)) - 1;
 
 % xxh = ax * ax';
 % r = sqrt(repmat(diag(xxh)', N, 1) + repmat(diag(xxh), 1, N) - 2 * xxh);
@@ -18,18 +22,19 @@ switch kernel
     case 'cubic'
         Phi = r.^3;
 end
+Phi = Phi + 1e-10*eye(N);
 P = [ones(N, 1), ax];
 A = [Phi, P; P' zeros(D + 1, D + 1)];
 b = [ay; zeros(D + 1, size(ay, 2))];
 
-% if rcond(A) <= eps
-%     para.alpha = Phi \ ay;
-% else
+if rcond(A) <= 1e-12
+    theta = pinv(A) * b;
+else
     theta = A \ b;
-    
-    para.alpha = theta(1 : N, :);
-    para.beta = theta(N + 1 : end, :);
-% end
+end
+
+para.alpha = theta(1 : N, :);
+para.beta = theta(N + 1 : end, :);
 para.xmin = xmin;
 para.xmax = xmax;
 para.ymin = ymin;

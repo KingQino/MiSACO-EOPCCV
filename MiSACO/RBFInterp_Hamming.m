@@ -6,12 +6,16 @@ np = size(ax, 1);
 
 ymin = para.ymin;
 ymax = para.ymax;
+yrange = ymax - ymin;
+yrange(yrange < eps) = eps;
 
 ax_nc = ax(:,1:D-len_c);
 ax_c  = ax(:,D-len_c+1:D);
 
 x_nc = x(:,1:D-len_c);
-x_nc = (x_nc - dn)./(up - dn) - 0.5; 
+xrange = up - dn;
+xrange(xrange < eps) = eps;
+x_nc = (x_nc - dn)./xrange - 0.5; 
 x_c  = x(:,D-len_c+1:D);
 
 x = [x_nc,x_c];
@@ -29,15 +33,16 @@ end
 
 y = Phi * para.alpha;
 %renormalization
-y = repmat(ymax - ymin, nx, 1)./2 .* (y + 1) + repmat(ymin, nx, 1);
+y = repmat(yrange, nx, 1)./2 .* (y + 1) + repmat(ymin, nx, 1);
 
-switch para.kernel
-    case 'gaussian'
-        sigma2 = 1 / sqrt(2 * pi) - Phi*(para.Phi\(Phi'));
-    case 'cubic'
-
-        sigma2 =  - Phi*(para.Phi\(Phi'));
+if nargout > 1
+    switch para.kernel
+        case 'gaussian'
+            sigma2 = 1 / sqrt(2 * pi) - Phi*(pinv(para.Phi)*(Phi'));
+        case 'cubic'
+            sigma2 =  - Phi*(pinv(para.Phi)*(Phi'));
+    end
+    sigma2 = abs(diag(sigma2));
 end
-sigma2 = abs(diag(sigma2));
 
 end

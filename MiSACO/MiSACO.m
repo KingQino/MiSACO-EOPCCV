@@ -60,9 +60,17 @@ classdef MiSACO < ALGORITHM
                     for i = 1 : No
                         RBF_evaluate(i) = RBFInterp_Hamming(OffDec(i,:),Problem.Dc, upper_r, lower_r, RBF_glo);
                     end
-                    [~,rank] = sort(RBF_evaluate);
-                    id_selected = rank(1);
-                    pred_rbf    = RBF_evaluate(id_selected);
+                    finiteRBF = isfinite(RBF_evaluate);
+                    if any(finiteRBF)
+                        RBF_rank_value = RBF_evaluate;
+                        RBF_rank_value(~finiteRBF) = inf;
+                        [~,rank] = sort(RBF_rank_value);
+                        id_selected = rank(1);
+                        pred_rbf    = RBF_evaluate(id_selected);
+                    else
+                        id_selected = randi(size(OffDec,1));
+                        pred_rbf    = nan;
+                    end
                     feBefore    = Problem.FE;
                     New         = Problem.Evaluation(OffDec(id_selected,:));
                     SurLog      = LogSurrogatePrediction(SurLog,'RBF',pred_rbf,New.objs,Problem.FE);
@@ -72,9 +80,17 @@ classdef MiSACO < ALGORITHM
                     
                     % LSBT-Based Selection
                     RF_evaluate = predict(RF_net,OffDec);
-                    [~,rank] = sort(RF_evaluate);
-                    id_selected = rank(1);
-                    pred_rf     = RF_evaluate(id_selected);
+                    finiteRF = isfinite(RF_evaluate);
+                    if any(finiteRF)
+                        RF_rank_value = RF_evaluate;
+                        RF_rank_value(~finiteRF) = inf;
+                        [~,rank] = sort(RF_rank_value);
+                        id_selected = rank(1);
+                        pred_rf     = RF_evaluate(id_selected);
+                    else
+                        id_selected = randi(size(OffDec,1));
+                        pred_rf     = nan;
+                    end
                     feBefore    = Problem.FE;
                     New         = Problem.Evaluation(OffDec(id_selected,:));
                     SurLog      = LogSurrogatePrediction(SurLog,'RF',pred_rf,New.objs,Problem.FE);
@@ -108,11 +124,13 @@ classdef MiSACO < ALGORITHM
                         idx_rank_best = dist_r(best_r,best_Arc_r);
                         local_up = max(best_Arc_r(idx_rank_best,:));
                         local_dn = min(best_Arc_r(idx_rank_best,:));
-                        xr_Local = Local_Search(best_Arc_r(idx_rank_best,:),best_Arc_f(idx_rank_best),local_up,local_dn,best_r);
-                        feBefore = Problem.FE;
-                        New      = Problem.Evaluation([xr_Local,best_c]);
-                        [History,EvalLog,currentBest] = LogRealEvaluation(History,EvalLog,New,'LocalSearch',feBefore,currentBest);
-                        DB = [DB, New];
+                        [xr_Local,local_success] = Local_Search(best_Arc_r(idx_rank_best,:),best_Arc_f(idx_rank_best),local_up,local_dn,best_r);
+                        if local_success
+                            feBefore = Problem.FE;
+                            New      = Problem.Evaluation([xr_Local,best_c]);
+                            [History,EvalLog,currentBest] = LogRealEvaluation(History,EvalLog,New,'LocalSearch',feBefore,currentBest);
+                            DB = [DB, New];
+                        end
                     end
                     
                     %% Population Update
@@ -229,8 +247,14 @@ function [mae,rmse] = SurrogateError(SurLog,source)
     idx = strcmp(SurLog.Source,source);
     if any(idx)
         err  = SurLog.Pred(idx) - SurLog.Real(idx);
-        mae  = mean(abs(err));
-        rmse = sqrt(mean(err.^2));
+        err  = err(isfinite(err));
+        if isempty(err)
+            mae  = nan;
+            rmse = nan;
+        else
+            mae  = mean(abs(err));
+            rmse = sqrt(mean(err.^2));
+        end
     else
         mae  = nan;
         rmse = nan;
