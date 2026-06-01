@@ -16,7 +16,7 @@ best_Arc_f = best_Arc_f(distinct,:);
 rbfnet_best = RBFCreate(best_Arc_r, best_Arc_f(:,1),'cubic');
 
 options = optimset('Algorithm', 'interior-point', 'MaxFunEvals', 300, 'Display', 'off');
-obj(best_r')
+obj(best_r');
 out_best = (fmincon(@obj, (best_r)', [], [], [], [], local_dn, local_up, [], options))';
 
 function y = obj(x)
