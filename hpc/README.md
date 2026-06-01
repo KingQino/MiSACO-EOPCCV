@@ -19,7 +19,7 @@ MISACO_PLATEMO_DIR=/path/to/PlatEMO/PlatEMO \
 MISACO_MAX_FE=600 \
 MISACO_MAX_TRIALS=10 \
 STATS_NAME=stats_01 \
-MAX_PARALLEL=30 \
+MAX_PARALLEL=50 \
 MEM_PER_CPU=3G \
 bash hpc/submit_array.sh
 ```
@@ -28,16 +28,16 @@ With the defaults, up to 30 seed tasks run at once and each task requests
 1 CPU core and 3G memory per CPU. This is seed-level parallelism: one array
 task runs one `(problem, seed)` pair. Set `MAX_PARALLEL` higher if the
 cluster allocation permits, or set `MEM_PER_CPU=4G`/`5G` if your cluster
-reports MATLAB memory pressure. The submit script caps concurrency at
-`MAX_PARALLEL_CAP=30` by default to avoid starting too many MATLAB processes
-at once; raise the cap explicitly only after a smaller run is stable.
+reports MATLAB memory pressure. The submit script caps requested concurrency
+at `MAX_PARALLEL_CAP=100` by default, so `MAX_PARALLEL=50` is allowed without
+an extra override.
 
 To run the AGES variant instead of the MiSACO baseline:
 
 ```bash
 MISACO_ALGORITHM=AGES \
 STATS_NAME=stats_01 \
-MAX_PARALLEL=30 \
+MAX_PARALLEL=50 \
 MEM_PER_CPU=3G \
 bash hpc/submit_array.sh
 ```
@@ -57,7 +57,7 @@ Recommended AGES command:
 ```bash
 MISACO_ALGORITHM=AGES \
 STATS_NAME=stats_02 \
-MAX_PARALLEL=30 \
+MAX_PARALLEL=50 \
 MEM_PER_CPU=3G \
 bash hpc/submit_array.sh
 ```
@@ -67,7 +67,7 @@ Recommended AGESV2 command:
 ```bash
 MISACO_ALGORITHM=AGESV2 \
 STATS_NAME=stats_01 \
-MAX_PARALLEL=30 \
+MAX_PARALLEL=50 \
 MEM_PER_CPU=3G \
 bash hpc/submit_array.sh
 ```

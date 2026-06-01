@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 log_dir="${LOG_DIR:-$repo_root/logs}"
 requested_max_parallel="${MAX_PARALLEL:-30}"
-max_parallel_cap="${MAX_PARALLEL_CAP:-30}"
+max_parallel_cap="${MAX_PARALLEL_CAP:-100}"
 mem_per_cpu="${MEM_PER_CPU:-3G}"
 stats_name="${STATS_NAME:-stats}"
 sbatch_script="$repo_root/hpc/run_instance_array.sbatch"
