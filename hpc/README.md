@@ -28,7 +28,9 @@ With the defaults, up to 30 seed tasks run at once and each task requests
 1 CPU core and 3G memory per CPU. This is seed-level parallelism: one array
 task runs one `(problem, seed)` pair. Set `MAX_PARALLEL` higher if the
 cluster allocation permits, or set `MEM_PER_CPU=4G`/`5G` if your cluster
-reports MATLAB memory pressure.
+reports MATLAB memory pressure. The submit script caps concurrency at
+`MAX_PARALLEL_CAP=30` by default to avoid starting too many MATLAB processes
+at once; raise the cap explicitly only after a smaller run is stable.
 
 To run the AGES variant instead of the MiSACO baseline:
 
@@ -43,6 +45,22 @@ bash hpc/submit_array.sh
 Use a new `STATS_NAME` for each experiment batch, for example `stats_01`,
 `stats_02`, or `stats_rastrigin_ablation`. If `MISACO_STATS_ROOT` is set,
 it overrides `<Algorithm>/<STATS_NAME>` completely.
+
+The submit script runs a small MATLAB preflight job first. If MATLAB fails
+while installing or starting MathWorks Service Host, the array job will not
+start. This is intentional: it catches cluster-side MATLAB startup issues
+before hundreds of seed tasks are submitted. Set `SUBMIT_PREFLIGHT=0` only
+after the MATLAB module is known to be stable.
+
+Recommended AGES command:
+
+```bash
+MISACO_ALGORITHM=AGES \
+STATS_NAME=stats_02 \
+MAX_PARALLEL=30 \
+MEM_PER_CPU=3G \
+bash hpc/submit_array.sh
+```
 
 The submit script also starts a dependent collect job that writes:
 

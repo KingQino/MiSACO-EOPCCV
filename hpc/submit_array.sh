@@ -3,10 +3,12 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 log_dir="${LOG_DIR:-$repo_root/logs}"
-max_parallel="${MAX_PARALLEL:-30}"
+requested_max_parallel="${MAX_PARALLEL:-30}"
+max_parallel_cap="${MAX_PARALLEL_CAP:-30}"
 mem_per_cpu="${MEM_PER_CPU:-3G}"
 stats_name="${STATS_NAME:-stats}"
 sbatch_script="$repo_root/hpc/run_instance_array.sbatch"
+preflight_script="$repo_root/hpc/preflight_matlab.sbatch"
 collect_script="$repo_root/hpc/collect_results.sbatch"
 
 mkdir -p "$log_dir"
@@ -27,6 +29,8 @@ else
 fi
 export MISACO_PLATEMO_DIR="${MISACO_PLATEMO_DIR:-$repo_root/../PlatEMO/PlatEMO}"
 export MISACO_ARRAY_MODE="${MISACO_ARRAY_MODE:-seed}"
+export MATLAB_MODULE="${MATLAB_MODULE:-matlab/2024a}"
+export START_DELAY_SECONDS="${START_DELAY_SECONDS:-90}"
 
 if [[ ! -d "$MISACO_PLATEMO_DIR" ]]; then
     echo "PlatEMO directory not found: $MISACO_PLATEMO_DIR" >&2
@@ -40,8 +44,30 @@ else
     array_max=29
 fi
 
+if (( requested_max_parallel > max_parallel_cap )); then
+    echo "Requested MAX_PARALLEL=$requested_max_parallel exceeds MAX_PARALLEL_CAP=$max_parallel_cap; using $max_parallel_cap." >&2
+    max_parallel="$max_parallel_cap"
+else
+    max_parallel="$requested_max_parallel"
+fi
+
+dependency_args=()
+if [[ "${SUBMIT_PREFLIGHT:-1}" == "1" ]]; then
+    preflight_job_id=$(sbatch \
+        --parsable \
+        --job-name="${job_name}-preflight" \
+        --cpus-per-task=1 \
+        --mem-per-cpu="$mem_per_cpu" \
+        --output="$log_dir/%x-%j.out" \
+        --chdir="$repo_root" \
+        "$preflight_script")
+    dependency_args=(--dependency="afterok:$preflight_job_id")
+    echo "Submitted MATLAB preflight job: $preflight_job_id"
+fi
+
 array_job_id=$(sbatch \
     --parsable \
+    "${dependency_args[@]}" \
     --array="0-$array_max%$max_parallel" \
     --job-name="$job_name" \
     --cpus-per-task=1 \
@@ -57,9 +83,13 @@ echo "  Max FE: $MISACO_MAX_FE"
 echo "  Algorithm: $MISACO_ALGORITHM"
 echo "  Stats name: $stats_name"
 echo "  Array mode: $MISACO_ARRAY_MODE"
-echo "  Max parallel array tasks: $max_parallel"
+echo "  Requested max parallel array tasks: $requested_max_parallel"
+echo "  Max parallel cap: $max_parallel_cap"
+echo "  Effective max parallel array tasks: $max_parallel"
 echo "  CPUs per array task: 1"
 echo "  Memory per CPU: $mem_per_cpu"
+echo "  MATLAB module: $MATLAB_MODULE"
+echo "  Startup stagger window: ${START_DELAY_SECONDS}s"
 echo "  Detailed per-seed logs: $MISACO_SAVE_DETAILED_LOGS"
 echo "  Stats root: $MISACO_STATS_ROOT"
 
