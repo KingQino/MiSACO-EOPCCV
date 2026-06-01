@@ -3,9 +3,9 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 log_dir="${LOG_DIR:-$repo_root/logs}"
-job_name="${JOB_NAME:-misaco}"
 max_parallel="${MAX_PARALLEL:-30}"
 mem_per_cpu="${MEM_PER_CPU:-3G}"
+stats_name="${STATS_NAME:-stats}"
 sbatch_script="$repo_root/hpc/run_instance_array.sbatch"
 collect_script="$repo_root/hpc/collect_results.sbatch"
 
@@ -17,7 +17,14 @@ export MISACO_MAX_FE="${MISACO_MAX_FE:-600}"
 export MISACO_PARENT_N="${MISACO_PARENT_N:-60}"
 export MISACO_OFFSPRING_N="${MISACO_OFFSPRING_N:-100}"
 export MISACO_SAVE_DETAILED_LOGS="${MISACO_SAVE_DETAILED_LOGS:-0}"
-export MISACO_STATS_ROOT="${MISACO_STATS_ROOT:-$repo_root/MiSACO/stats}"
+export MISACO_ALGORITHM="${MISACO_ALGORITHM:-MiSACO}"
+export STATS_NAME="$stats_name"
+job_name="${JOB_NAME:-$MISACO_ALGORITHM}"
+if [[ -z "${MISACO_STATS_ROOT:-}" ]]; then
+    export MISACO_STATS_ROOT="$repo_root/$MISACO_ALGORITHM/$stats_name"
+else
+    export MISACO_STATS_ROOT
+fi
 export MISACO_PLATEMO_DIR="${MISACO_PLATEMO_DIR:-$repo_root/../PlatEMO/PlatEMO}"
 export MISACO_ARRAY_MODE="${MISACO_ARRAY_MODE:-seed}"
 
@@ -43,10 +50,12 @@ array_job_id=$(sbatch \
     --chdir="$repo_root" \
     "$sbatch_script")
 
-echo "Submitted MiSACO array job: $array_job_id"
+echo "Submitted $MISACO_ALGORITHM array job: $array_job_id"
 echo "  Problems: F1-F30"
 echo "  Seeds per problem: $MISACO_MAX_TRIALS"
 echo "  Max FE: $MISACO_MAX_FE"
+echo "  Algorithm: $MISACO_ALGORITHM"
+echo "  Stats name: $stats_name"
 echo "  Array mode: $MISACO_ARRAY_MODE"
 echo "  Max parallel array tasks: $max_parallel"
 echo "  CPUs per array task: 1"

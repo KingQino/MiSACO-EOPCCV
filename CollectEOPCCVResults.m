@@ -129,7 +129,12 @@ function row = SummaryToRow(RunSummary, seed)
         'RBF_MAE', RunSummary.RBF_MAE, ...
         'RBF_RMSE', RunSummary.RBF_RMSE, ...
         'RF_MAE', RunSummary.RF_MAE, ...
-        'RF_RMSE', RunSummary.RF_RMSE);
+        'RF_RMSE', RunSummary.RF_RMSE, ...
+        'AlignmentSamples', GetSummaryField(RunSummary,'AlignmentSamples'), ...
+        'AlignmentGuidedEvaluations', GetSummaryField(RunSummary,'AlignmentGuidedEvaluations'), ...
+        'AlignmentFallbackEvaluations', GetSummaryField(RunSummary,'AlignmentFallbackEvaluations'), ...
+        'AlignmentError_MAE', GetSummaryField(RunSummary,'AlignmentError_MAE'), ...
+        'AlignmentError_RMSE', GetSummaryField(RunSummary,'AlignmentError_RMSE'));
 end
 
 
@@ -177,4 +182,13 @@ function WriteGeneralText(filePath, General)
     end
 
     clear cleaner;
+end
+
+
+function value = GetSummaryField(RunSummary,fieldName)
+    if isfield(RunSummary,fieldName)
+        value = RunSummary.(fieldName);
+    else
+        value = nan;
+    end
 end

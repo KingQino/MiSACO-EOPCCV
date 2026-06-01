@@ -2,6 +2,6 @@
 *.mat
 
 # Generated HPC experiment outputs
-MiSACO/stats/*
-!MiSACO/stats/README.md
+MiSACO/stats*/
+AGES/stats*/
 logs/

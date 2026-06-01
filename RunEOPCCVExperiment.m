@@ -1,4 +1,4 @@
-function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN, offspringN, statsRoot, numWorkers)
+function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN, offspringN, statsRoot, numWorkers, algorithmName)
 %RunEOPCCVExperiment Run one EOPCCV problem for multiple random seeds.
 
     if nargin < 2 || isempty(seeds)
@@ -18,6 +18,9 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
     end
     if nargin < 7 || isempty(numWorkers)
         numWorkers = ReadIntegerEnv('MISACO_NUM_WORKERS', 1);
+    end
+    if nargin < 8 || isempty(algorithmName)
+        algorithmName = ReadStringEnv('MISACO_ALGORITHM', 'MiSACO');
     end
 
     problemNumber = ParseProblemId(problemId);
@@ -46,6 +49,7 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
     end
 
     fprintf('Running %s for seeds %s\n', problemClass, mat2str(seeds));
+    fprintf('Algorithm: %s\n', algorithmName);
     fprintf('Seed workers: %d\n', numWorkers);
     fprintf('Detailed CSV/result logs: %d\n', saveDetailedLogs);
     fprintf('Write instance stats now: %d\n', writeInstanceStats);
@@ -59,7 +63,7 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
             seedDir = fullfile(instanceDir,num2str(seed));
             EnsureFolder(seedDir);
             seedSummaries(k) = RunSingleSeed(problemHandle, problemClass, ...
-                instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs);
+                instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs, algorithmName);
         end
     else
         fprintf('Running seeds serially.\n');
@@ -68,7 +72,7 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
             seedDir = fullfile(instanceDir,num2str(seed));
             EnsureFolder(seedDir);
             seedSummaries(k) = RunSingleSeed(problemHandle, problemClass, ...
-                instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs);
+                instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs, algorithmName);
         end
     end
 
@@ -94,7 +98,7 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
 end
 
 
-function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs)
+function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs, algorithmName)
     historyFile = fullfile(seedDir, sprintf('history.%s.seed%d.mat', instanceName, seed));
     oldHistoryFile = getenv('MISACO_HISTORY_FILE');
     setenv('MISACO_HISTORY_FILE',historyFile);
@@ -104,7 +108,8 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     fprintf('  Seed %d -> %s\n', seed, seedDir);
 
     Problem   = problemHandle('maxFE',maxFE);
-    Algorithm = MiSACO('parameter',{parentN,offspringN},'save',0);
+    AlgorithmHandle = str2func(algorithmName);
+    Algorithm = AlgorithmHandle('parameter',{parentN,offspringN},'save',0);
     Algorithm.Solve(Problem);
 
     Population = Algorithm.result{end,2};
@@ -115,10 +120,19 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
 
     if ~isfile(historyFile)
         error('RunEOPCCVExperiment:MissingHistoryFile', ...
-            'MiSACO did not write the expected history file: %s', historyFile);
+            '%s did not write the expected history file: %s', algorithmName, historyFile);
     end
 
-    load(historyFile,'History','EvalLog','SurLog','RunSummary');
+    data = load(historyFile);
+    History = data.History;
+    EvalLog = data.EvalLog;
+    SurLog  = data.SurLog;
+    RunSummary = data.RunSummary;
+    hasAlignLog = isfield(data,'AlignLog');
+    if hasAlignLog
+        AlignLog = data.AlignLog;
+    end
+    RunSummary.Algorithm    = algorithmName;
     RunSummary.Problem      = problemClass;
     RunSummary.Instance     = instanceName;
     RunSummary.Seed         = seed;
@@ -127,7 +141,11 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     RunSummary.OffspringN   = offspringN;
     RunSummary.BestDecision = bestX;
     RunSummary.SaveDetailedLogs = saveDetailedLogs;
-    save(historyFile,'History','EvalLog','SurLog','RunSummary');
+    if hasAlignLog
+        save(historyFile,'History','EvalLog','SurLog','AlignLog','RunSummary');
+    else
+        save(historyFile,'History','EvalLog','SurLog','RunSummary');
+    end
 
     WriteHistoryCsv(fullfile(seedDir,sprintf('evols.%s.csv',instanceName)),History);
     WriteSolutionFile(fullfile(seedDir,sprintf('solution.%s.txt',instanceName)), ...
@@ -137,9 +155,15 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     if saveDetailedLogs
         WriteEvalLogCsv(fullfile(seedDir,sprintf('eval_log.%s.csv',instanceName)),EvalLog);
         WriteSurLogCsv(fullfile(seedDir,sprintf('surrogate_log.%s.csv',instanceName)),SurLog);
+        if hasAlignLog
+            WriteAlignLogCsv(fullfile(seedDir,sprintf('alignment_log.%s.csv',instanceName)),AlignLog);
+        end
 
         result = struct();
         result.RunSummary = RunSummary;
+        if hasAlignLog
+            result.AlignLog = AlignLog;
+        end
         result.bestObjective = bestObj;
         result.bestFE = RunSummary.BestFE;
         result.bestDecision = bestX;
@@ -166,6 +190,11 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.RBF_RMSE = RunSummary.RBF_RMSE;
     summary.RF_MAE = RunSummary.RF_MAE;
     summary.RF_RMSE = RunSummary.RF_RMSE;
+    summary.AlignmentSamples = GetSummaryField(RunSummary,'AlignmentSamples');
+    summary.AlignmentGuidedEvaluations = GetSummaryField(RunSummary,'AlignmentGuidedEvaluations');
+    summary.AlignmentFallbackEvaluations = GetSummaryField(RunSummary,'AlignmentFallbackEvaluations');
+    summary.AlignmentError_MAE = GetSummaryField(RunSummary,'AlignmentError_MAE');
+    summary.AlignmentError_RMSE = GetSummaryField(RunSummary,'AlignmentError_RMSE');
 
     clear cleanup;
 end
@@ -245,7 +274,12 @@ function summary = EmptySeedSummary()
         'RBF_MAE', NaN, ...
         'RBF_RMSE', NaN, ...
         'RF_MAE', NaN, ...
-        'RF_RMSE', NaN);
+        'RF_RMSE', NaN, ...
+        'AlignmentSamples', NaN, ...
+        'AlignmentGuidedEvaluations', NaN, ...
+        'AlignmentFallbackEvaluations', NaN, ...
+        'AlignmentError_MAE', NaN, ...
+        'AlignmentError_RMSE', NaN);
 end
 
 
@@ -282,6 +316,25 @@ function value = ReadBooleanEnv(name, defaultValue)
 
     rawValue = lower(strtrim(rawValue));
     value = any(strcmp(rawValue,{'1','true','yes','on'}));
+end
+
+
+function value = ReadStringEnv(name, defaultValue)
+    rawValue = getenv(name);
+    if isempty(rawValue)
+        value = defaultValue;
+    else
+        value = rawValue;
+    end
+end
+
+
+function value = GetSummaryField(RunSummary,fieldName)
+    if isfield(RunSummary,fieldName)
+        value = RunSummary.(fieldName);
+    else
+        value = nan;
+    end
 end
 
 
@@ -335,6 +388,24 @@ function WriteSurLogCsv(filePath, SurLog)
 end
 
 
+function WriteAlignLogCsv(filePath, AlignLog)
+    if isempty(AlignLog.FE)
+        T = table(zeros(0,1),cell(0,1),false(0,1),zeros(0,1),zeros(0,1), ...
+            zeros(0,1),zeros(0,1),zeros(0,1),zeros(0,1),zeros(0,1), ...
+            'VariableNames',{'FE','Source','UsedAlignment','PredObj','RealObj', ...
+            'AbsError','PredAbsError','Score','Quality','Novelty'});
+    else
+        T = table(AlignLog.FE(:),AlignLog.Source(:),logical(AlignLog.UsedAlignment(:)), ...
+            AlignLog.PredObj(:),AlignLog.RealObj(:),AlignLog.AbsError(:), ...
+            AlignLog.PredAbsError(:),AlignLog.Score(:),AlignLog.Quality(:), ...
+            AlignLog.Novelty(:), ...
+            'VariableNames',{'FE','Source','UsedAlignment','PredObj','RealObj', ...
+            'AbsError','PredAbsError','Score','Quality','Novelty'});
+    end
+    writetable(T,filePath);
+end
+
+
 function WriteSolutionFile(filePath, bestObj, bestFE, bestX)
     fileID = fopen(filePath,'w');
     if fileID == -1
@@ -358,6 +429,9 @@ function WriteSeedSummaryFile(filePath, RunSummary)
             'Could not open %s for writing.', filePath);
     end
     cleaner = onCleanup(@() fclose(fileID));
+    if isfield(RunSummary,'Algorithm')
+        fprintf(fileID,'Algorithm %s\n',RunSummary.Algorithm);
+    end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
     fprintf(fileID,'BestObjective %.12g\n',RunSummary.BestObjective);
@@ -376,5 +450,12 @@ function WriteSeedSummaryFile(filePath, RunSummary)
     fprintf(fileID,'RBF_RMSE %.12g\n',RunSummary.RBF_RMSE);
     fprintf(fileID,'RF_MAE %.12g\n',RunSummary.RF_MAE);
     fprintf(fileID,'RF_RMSE %.12g\n',RunSummary.RF_RMSE);
+    if isfield(RunSummary,'AlignmentSamples')
+        fprintf(fileID,'AlignmentSamples %d\n',RunSummary.AlignmentSamples);
+        fprintf(fileID,'AlignmentGuidedEvaluations %d\n',RunSummary.AlignmentGuidedEvaluations);
+        fprintf(fileID,'AlignmentFallbackEvaluations %d\n',RunSummary.AlignmentFallbackEvaluations);
+        fprintf(fileID,'AlignmentError_MAE %.12g\n',RunSummary.AlignmentError_MAE);
+        fprintf(fileID,'AlignmentError_RMSE %.12g\n',RunSummary.AlignmentError_RMSE);
+    end
     clear cleaner;
 end

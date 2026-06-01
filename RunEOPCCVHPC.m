@@ -31,8 +31,9 @@ function RunEOPCCVHPC(varargin)
     maxFE      = ReadIntegerEnv('MISACO_MAX_FE', 600);
     parentN    = ReadIntegerEnv('MISACO_PARENT_N', 60);
     offspringN = ReadIntegerEnv('MISACO_OFFSPRING_N', 100);
+    algorithmName = ReadStringEnv('MISACO_ALGORITHM','MiSACO');
     statsRoot  = ReadStringEnv('MISACO_STATS_ROOT', ...
-        fullfile(projectRoot,'MiSACO','stats'));
+        fullfile(projectRoot,algorithmName,'stats'));
     arrayMode  = lower(ReadStringEnv('MISACO_ARRAY_MODE','seed'));
     problemIds = 1:30;
 
@@ -54,8 +55,9 @@ function RunEOPCCVHPC(varargin)
             maxNumCompThreads(1);
             fprintf('Array task %d selected EOPCCV_F%d seed %d\n', ...
                 arrayTaskId, problemId, seed);
+            fprintf('Algorithm: %s\n', algorithmName);
             fprintf('Stats root: %s\n', statsRoot);
-            RunEOPCCVExperiment(problemId, seed, maxFE, parentN, offspringN, statsRoot, 1);
+            RunEOPCCVExperiment(problemId, seed, maxFE, parentN, offspringN, statsRoot, 1, algorithmName);
             clear cleanup;
 
         case 'problem'
@@ -73,8 +75,9 @@ function RunEOPCCVHPC(varargin)
             maxNumCompThreads(1);
             fprintf('Array task %d selected EOPCCV_F%d\n', arrayTaskId, problemId);
             fprintf('Seeds: 1-%d, workers: %d\n', maxTrials, numWorkers);
+            fprintf('Algorithm: %s\n', algorithmName);
             fprintf('Stats root: %s\n', statsRoot);
-            RunEOPCCVExperiment(problemId, 1:maxTrials, maxFE, parentN, offspringN, statsRoot, numWorkers);
+            RunEOPCCVExperiment(problemId, 1:maxTrials, maxFE, parentN, offspringN, statsRoot, numWorkers, algorithmName);
 
         otherwise
             error('RunEOPCCVHPC:InvalidArrayMode', ...
