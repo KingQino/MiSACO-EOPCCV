@@ -84,7 +84,15 @@ function T = LoadSeedStats(instanceDir, instanceName)
         seed = str2double(seedName);
         historyFile = fullfile(instanceDir,seedName, ...
             sprintf('history.%s.seed%d.mat',instanceName,seed));
+        summaryFile = fullfile(instanceDir,seedName, ...
+            sprintf('summary.%s.seed%d.txt',instanceName,seed));
         if ~isfile(historyFile)
+            continue;
+        end
+        if ~isfile(summaryFile)
+            warning('CollectEOPCCVResults:IncompleteSeed', ...
+                'Skipping incomplete seed without summary file: %s seed %d', ...
+                instanceName,seed);
             continue;
         end
 
@@ -97,12 +105,7 @@ function T = LoadSeedStats(instanceDir, instanceName)
     end
 
     if isempty(rows)
-        statsPath = fullfile(instanceDir,sprintf('stats.%s.csv',instanceName));
-        if isfile(statsPath)
-            T = readtable(statsPath);
-        else
-            T = table();
-        end
+        T = table();
         return;
     end
 

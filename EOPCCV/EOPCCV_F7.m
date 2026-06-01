@@ -30,7 +30,7 @@ classdef EOPCCV_F7 < PROBLEM
             obj.D        = obj.Dr + obj.Dc; 
             obj.lower   = [-100*ones(1,obj.Dr),1e-10*ones(1,obj.Dc)];
             obj.upper   = [100*ones(1,obj.Dr),10*ones(1,obj.Dc)];
-            obj.len_c   = 10*ones(obj.Dc);
+            obj.len_c   = 10*ones(1,obj.Dc);
             obj.encoding = 'real';
         end
         %% Calculate objective values

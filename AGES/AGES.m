@@ -49,7 +49,7 @@ classdef AGES < ALGORITHM
 
                     [~,rank_v] = sort(P.objs);
                     [~,rank_v] = sort(rank_v);
-                    OffDec = ACO_MV_generate(P.decs,Problem.Dr,Problem.Dc,Np,Problem.len_c,rank_v,No,upper_r,lower_r);
+                    OffDec = ACO_MV_generate(P.decs,Problem.Dr,Problem.Dc,Np,NormalizeLenC(Problem.len_c,Problem.Dc),rank_v,No,upper_r,lower_r);
 
                     RBF_evaluate = zeros(size(OffDec,1),1);
                     for i = 1 : size(OffDec,1)
@@ -196,7 +196,7 @@ function [Features,Info] = BuildAlignmentFeatures( ...
     x_r = min(max(x_r,0),1);
 
     x_c = ceil(OffDec(:,Dr+1:Problem.D));
-    len_c = Problem.len_c;
+    len_c = NormalizeLenC(Problem.len_c,Dc);
     crange = max(1,len_c - 1);
     x_c_scaled = (x_c - 1)./crange;
     x_c_scaled = min(max(x_c_scaled,0),1);
@@ -271,6 +271,17 @@ function [nearestDist,avgKDist,sameCatCount] = CandidateDistances(OffDec,Train_X
         nearestDist(i) = sortedDist(1);
         avgKDist(i) = mean(sortedDist(1:k));
         sameCatCount(i) = sum(all(trainC == candC(i,:),2));
+    end
+end
+
+function len_c = NormalizeLenC(len_c,Dc)
+    len_c = len_c(:)';
+    if isempty(len_c)
+        len_c = 5*ones(1,Dc);
+    elseif numel(len_c) < Dc
+        len_c = [len_c,repmat(len_c(end),1,Dc-numel(len_c))];
+    elseif numel(len_c) > Dc
+        len_c = len_c(1:Dc);
     end
 end
 
