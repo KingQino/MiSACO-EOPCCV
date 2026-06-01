@@ -62,6 +62,16 @@ MEM_PER_CPU=3G \
 bash hpc/submit_array.sh
 ```
 
+Recommended AGESV2 command:
+
+```bash
+MISACO_ALGORITHM=AGESV2 \
+STATS_NAME=stats_01 \
+MAX_PARALLEL=30 \
+MEM_PER_CPU=3G \
+bash hpc/submit_array.sh
+```
+
 The submit script also starts a dependent collect job that writes:
 
 - `<Algorithm>/<STATS_NAME>/general.csv`

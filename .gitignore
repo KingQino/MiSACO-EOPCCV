@@ -4,4 +4,5 @@
 # Generated HPC experiment outputs
 MiSACO/stats*/
 AGES/stats*/
+AGESV2/stats*/
 logs/
