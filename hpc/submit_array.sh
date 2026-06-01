@@ -5,6 +5,7 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 log_dir="${LOG_DIR:-$repo_root/logs}"
 job_name="${JOB_NAME:-misaco}"
 max_parallel="${MAX_PARALLEL:-30}"
+mem_per_cpu="${MEM_PER_CPU:-3G}"
 sbatch_script="$repo_root/hpc/run_instance_array.sbatch"
 collect_script="$repo_root/hpc/collect_results.sbatch"
 
@@ -36,6 +37,8 @@ array_job_id=$(sbatch \
     --parsable \
     --array="0-$array_max%$max_parallel" \
     --job-name="$job_name" \
+    --cpus-per-task=1 \
+    --mem-per-cpu="$mem_per_cpu" \
     --output="$log_dir/%x-%A_%a.out" \
     --chdir="$repo_root" \
     "$sbatch_script")
@@ -46,6 +49,8 @@ echo "  Seeds per problem: $MISACO_MAX_TRIALS"
 echo "  Max FE: $MISACO_MAX_FE"
 echo "  Array mode: $MISACO_ARRAY_MODE"
 echo "  Max parallel array tasks: $max_parallel"
+echo "  CPUs per array task: 1"
+echo "  Memory per CPU: $mem_per_cpu"
 echo "  Detailed per-seed logs: $MISACO_SAVE_DETAILED_LOGS"
 echo "  Stats root: $MISACO_STATS_ROOT"
 
