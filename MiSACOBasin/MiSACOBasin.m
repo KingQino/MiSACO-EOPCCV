@@ -14,7 +14,8 @@ classdef MiSACOBasin < ALGORITHM
     methods
         function main(Algorithm,Problem)
             [History,EvalLog,SurLog] = InitializeLogs();
-            BasinState = InitializeBasinState();
+            Ablation = ReadBasinAblation();
+            BasinState = InitializeBasinState(Ablation);
             currentBest = inf;
             runStart    = tic;
             algorithmFile = which(class(Algorithm));
@@ -106,13 +107,13 @@ classdef MiSACOBasin < ALGORITHM
                     [xBasin,pred_basin,opId] = SelectBasinHopCandidate( ...
                         DB,Train_X,Train_Y,RBF_glo,RF_net,Problem,upper_r,lower_r,lenC, ...
                         BasinState,BasinPool,BasinTopK,BasinNoveltyWeight,BasinArchiveWeight, ...
-                        DisagreementWeight,MinDestroyRatio,MaxDestroyRatio,currentBest);
+                        DisagreementWeight,MinDestroyRatio,MaxDestroyRatio,currentBest,Ablation);
                     feBefore = Problem.FE;
                     bestBefore = currentBest;
                     New      = Problem.Evaluation(xBasin);
                     SurLog   = LogSurrogatePrediction(SurLog,'BasinHop',pred_basin,New.objs,Problem.FE);
                     [History,EvalLog,currentBest] = LogRealEvaluation(History,EvalLog,New,'BasinHop',feBefore,currentBest);
-                    BasinState = UpdateBasinState(BasinState,xBasin,New.objs,bestBefore,opId,Problem,upper_r,lower_r);
+                    BasinState = UpdateBasinState(BasinState,xBasin,New.objs,bestBefore,opId,Problem,upper_r,lower_r,Ablation);
                     DB = [DB, New];
 
                     [~,id_best] = min(DB.objs);
@@ -159,10 +160,18 @@ end
 function [xSelected,predSelected,opSelected] = SelectBasinHopCandidate( ...
     DB,Train_X,Train_Y,RBF_glo,RF_net,Problem,upper_r,lower_r,lenC,BasinState, ...
     BasinPool,BasinTopK,BasinNoveltyWeight,BasinArchiveWeight,DisagreementWeight, ...
-    MinDestroyRatio,MaxDestroyRatio,currentBest)
+    MinDestroyRatio,MaxDestroyRatio,currentBest,Ablation)
 
     [Candidates,OpIds] = GenerateBasinHopCandidates( ...
         DB,Problem,upper_r,lower_r,lenC,BasinState,BasinPool,MinDestroyRatio,MaxDestroyRatio);
+
+    if Ablation.RandomHopSelection
+        idSelected = randi(size(Candidates,1));
+        xSelected = Candidates(idSelected,:);
+        predSelected = nan;
+        opSelected = OpIds(idSelected);
+        return;
+    end
 
     RBFPred = PredictRBF(Candidates,RBF_glo,Problem,upper_r,lower_r);
     RFPred  = SafePredict(RF_net,Candidates);
@@ -171,7 +180,12 @@ function [xSelected,predSelected,opSelected] = SelectBasinHopCandidate( ...
 
     quality = PredictionQuality(ensemblePred,Train_Y,currentBest);
     mixedNovelty = MixedNearestNovelty(Candidates,Train_X,Problem,upper_r,lower_r);
-    basinNovelty = BasinArchiveNovelty(Candidates,Train_X,BasinState,Problem,upper_r,lower_r);
+    if Ablation.UseArchive
+        basinNovelty = BasinArchiveNovelty(Candidates,Train_X,BasinState,Problem,upper_r,lower_r);
+    else
+        basinNovelty = zeros(size(Candidates,1),1);
+        BasinArchiveWeight = 0;
+    end
     disagreement = UnitNormalize(abs(RBFPred(:) - RFPred(:)));
 
     qualityIdx = ShortlistByPrediction(ensemblePred,BasinTopK);
@@ -524,7 +538,46 @@ function out = UnitNormalize(values)
     end
 end
 
-function BasinState = InitializeBasinState()
+function Ablation = ReadBasinAblation()
+    rawMode = strtrim(getenv('MISACOBASIN_ABLATION'));
+    if isempty(rawMode)
+        rawMode = 'full';
+    end
+
+    mode = lower(strrep(rawMode,'-','_'));
+    switch mode
+        case {'full','none','default'}
+            Ablation.Name = 'full';
+            Ablation.UseArchive = true;
+            Ablation.AdaptiveOperators = true;
+            Ablation.RandomHopSelection = false;
+        case {'no_archive','noarchive'}
+            Ablation.Name = 'no_archive';
+            Ablation.UseArchive = false;
+            Ablation.AdaptiveOperators = true;
+            Ablation.RandomHopSelection = false;
+        case {'fixed_op','fixedop','fixed_operator','fixed_operators'}
+            Ablation.Name = 'fixed_op';
+            Ablation.UseArchive = true;
+            Ablation.AdaptiveOperators = false;
+            Ablation.RandomHopSelection = false;
+        case {'random_hop','randomhop','random_selection'}
+            Ablation.Name = 'random_hop';
+            Ablation.UseArchive = true;
+            Ablation.AdaptiveOperators = true;
+            Ablation.RandomHopSelection = true;
+        otherwise
+            error('MiSACOBasin:InvalidAblation', ...
+                ['Unknown MISACOBASIN_ABLATION=%s. Valid values are ', ...
+                'full, no_archive, fixed_op, random_hop.'], rawMode);
+    end
+end
+
+function BasinState = InitializeBasinState(Ablation)
+    BasinState.Ablation = Ablation.Name;
+    BasinState.UseArchive = Ablation.UseArchive;
+    BasinState.AdaptiveOperators = Ablation.AdaptiveOperators;
+    BasinState.RandomHopSelection = Ablation.RandomHopSelection;
     BasinState.Signatures = [];
     BasinState.OperatorWeights = ones(1,4);
     BasinState.OperatorCalls = zeros(1,4);
@@ -532,16 +585,22 @@ function BasinState = InitializeBasinState()
     BasinState.OperatorLabels = {'PeriodHop','WideRestart','CategoricalHop','EliteRecombine'};
 end
 
-function BasinState = UpdateBasinState(BasinState,x,obj,bestBefore,opId,Problem,upper_r,lower_r)
+function BasinState = UpdateBasinState(BasinState,x,obj,bestBefore,opId,Problem,upper_r,lower_r,Ablation)
     if opId < 1 || opId > numel(BasinState.OperatorWeights)
         return;
     end
     improved = obj(1) < bestBefore;
-    reward = 1 + 9*double(improved);
-    decay = 0.90;
-    BasinState.OperatorWeights(opId) = decay*BasinState.OperatorWeights(opId) + (1-decay)*reward;
+    if Ablation.AdaptiveOperators
+        reward = 1 + 9*double(improved);
+        decay = 0.90;
+        BasinState.OperatorWeights(opId) = decay*BasinState.OperatorWeights(opId) + (1-decay)*reward;
+    end
     BasinState.OperatorCalls(opId) = BasinState.OperatorCalls(opId) + 1;
     BasinState.OperatorImprovements(opId) = BasinState.OperatorImprovements(opId) + double(improved);
+
+    if ~Ablation.UseArchive
+        return;
+    end
 
     sig = BasinSignature(x,Problem,upper_r,lower_r);
     if isempty(BasinState.Signatures)
@@ -659,6 +718,10 @@ function RunSummary = BuildRunSummary(History,EvalLog,SurLog,BasinState,runStart
     RunSummary.BestFE        = bestFE;
     RunSummary.Runtime       = toc(runStart);
     RunSummary.TotalFE       = Problem.FE;
+    RunSummary.BasinAblation = BasinState.Ablation;
+    RunSummary.BasinUseArchive = BasinState.UseArchive;
+    RunSummary.BasinAdaptiveOperators = BasinState.AdaptiveOperators;
+    RunSummary.BasinRandomHopSelection = BasinState.RandomHopSelection;
 
     for i = 1 : length(sources)
         source = sources{i};
@@ -703,6 +766,7 @@ end
 
 function PrintRunSummary(RunSummary,historyFile)
     fprintf('\n========== MiSACOBasin Run Summary ==========\n');
+    fprintf('Basin Ablation: %s\n',RunSummary.BasinAblation);
     fprintf('Best Objective: %.12g\n',RunSummary.BestObjective);
     fprintf('Best FE: %d\n',RunSummary.BestFE);
     fprintf('Runtime: %.2fs\n',RunSummary.Runtime);

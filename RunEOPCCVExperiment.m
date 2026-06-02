@@ -456,6 +456,12 @@ function WriteSeedSummaryFile(filePath, RunSummary)
     if isfield(RunSummary,'Algorithm')
         fprintf(fileID,'Algorithm %s\n',RunSummary.Algorithm);
     end
+    if isfield(RunSummary,'BasinAblation')
+        fprintf(fileID,'BasinAblation %s\n',RunSummary.BasinAblation);
+        fprintf(fileID,'BasinUseArchive %d\n',RunSummary.BasinUseArchive);
+        fprintf(fileID,'BasinAdaptiveOperators %d\n',RunSummary.BasinAdaptiveOperators);
+        fprintf(fileID,'BasinRandomHopSelection %d\n',RunSummary.BasinRandomHopSelection);
+    end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
     fprintf(fileID,'BestObjective %.12g\n',RunSummary.BestObjective);

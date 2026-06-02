@@ -48,10 +48,19 @@ Recommended MiSACOBasin command:
 
 ```bash
 MISACO_ALGORITHM=MiSACOBasin \
+MISACOBASIN_ABLATION=full \
 STATS_NAME=stats_01 \
 MAX_PARALLEL=100 \
 MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
+```
+
+MiSACOBasin ablation runs:
+
+```bash
+MISACO_ALGORITHM=MiSACOBasin MISACOBASIN_ABLATION=no_archive STATS_NAME=stats_no_archive_01 MAX_PARALLEL=100 MEM_PER_CPU=4G bash hpc/submit_array.sh
+MISACO_ALGORITHM=MiSACOBasin MISACOBASIN_ABLATION=fixed_op STATS_NAME=stats_fixed_op_01 MAX_PARALLEL=100 MEM_PER_CPU=4G bash hpc/submit_array.sh
+MISACO_ALGORITHM=MiSACOBasin MISACOBASIN_ABLATION=random_hop STATS_NAME=stats_random_hop_01 MAX_PARALLEL=100 MEM_PER_CPU=4G bash hpc/submit_array.sh
 ```
 
 Use a new `STATS_NAME` for each experiment batch, for example `stats_01`,
