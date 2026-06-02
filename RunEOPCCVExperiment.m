@@ -194,7 +194,9 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.RF_RMSE = RunSummary.RF_RMSE;
     summary.BasinHop_MAE = GetSummaryField(RunSummary,'BasinHop_MAE');
     summary.BasinHop_RMSE = GetSummaryField(RunSummary,'BasinHop_RMSE');
+    summary.BasinTriggerAttempts = GetSummaryField(RunSummary,'BasinTriggerAttempts');
     summary.BasinTriggers = GetSummaryField(RunSummary,'BasinTriggers');
+    summary.BasinVetoes = GetSummaryField(RunSummary,'BasinVetoes');
     summary.BasinRandomFallbacks = GetSummaryField(RunSummary,'BasinRandomFallbacks');
     summary.BasinIsRastrigin = GetSummaryField(RunSummary,'BasinIsRastrigin');
     summary.EnsembleEvaluations = GetSummaryField(RunSummary,'EnsembleEvaluations');
@@ -294,7 +296,9 @@ function summary = EmptySeedSummary()
         'RF_RMSE', NaN, ...
         'BasinHop_MAE', NaN, ...
         'BasinHop_RMSE', NaN, ...
+        'BasinTriggerAttempts', NaN, ...
         'BasinTriggers', NaN, ...
+        'BasinVetoes', NaN, ...
         'BasinRandomFallbacks', NaN, ...
         'BasinIsRastrigin', NaN, ...
         'EnsembleEvaluations', NaN, ...
@@ -469,11 +473,14 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         fprintf(fileID,'BasinRandomHopSelection %d\n',RunSummary.BasinRandomHopSelection);
     end
     if isfield(RunSummary,'BasinTriggers')
-        fprintf(fileID,'BasinIsRastrigin %d\n',RunSummary.BasinIsRastrigin);
-        fprintf(fileID,'BasinTriggers %d\n',RunSummary.BasinTriggers);
-        fprintf(fileID,'BasinRandomFallbacks %d\n',RunSummary.BasinRandomFallbacks);
-        fprintf(fileID,'BasinRastriginStagFE %d\n',RunSummary.BasinRastriginStagFE);
-        fprintf(fileID,'BasinOtherStagFE %d\n',RunSummary.BasinOtherStagFE);
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinIsRastrigin','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinTriggerAttempts','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinTriggers','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinVetoes','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinRandomFallbacks','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinRastriginStagFE','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinOtherStagFE','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinPredImprovementTol','%.12g');
     end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
@@ -527,4 +534,13 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         fprintf(fileID,'AlignmentError_RMSE %.12g\n',RunSummary.AlignmentError_RMSE);
     end
     clear cleaner;
+end
+
+
+function WriteOptionalSummaryField(fileID, RunSummary, fieldName, valueFormat)
+    if isfield(RunSummary,fieldName)
+        fprintf(fileID,'%s ',fieldName);
+        fprintf(fileID,valueFormat,RunSummary.(fieldName));
+        fprintf(fileID,'\n');
+    end
 end
