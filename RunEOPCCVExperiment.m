@@ -194,6 +194,9 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.RF_RMSE = RunSummary.RF_RMSE;
     summary.BasinHop_MAE = GetSummaryField(RunSummary,'BasinHop_MAE');
     summary.BasinHop_RMSE = GetSummaryField(RunSummary,'BasinHop_RMSE');
+    summary.BasinTriggers = GetSummaryField(RunSummary,'BasinTriggers');
+    summary.BasinRandomFallbacks = GetSummaryField(RunSummary,'BasinRandomFallbacks');
+    summary.BasinIsRastrigin = GetSummaryField(RunSummary,'BasinIsRastrigin');
     summary.EnsembleEvaluations = GetSummaryField(RunSummary,'EnsembleEvaluations');
     summary.EnsembleImprovements = GetSummaryField(RunSummary,'EnsembleImprovements');
     summary.ET_MAE = GetSummaryField(RunSummary,'ET_MAE');
@@ -291,6 +294,9 @@ function summary = EmptySeedSummary()
         'RF_RMSE', NaN, ...
         'BasinHop_MAE', NaN, ...
         'BasinHop_RMSE', NaN, ...
+        'BasinTriggers', NaN, ...
+        'BasinRandomFallbacks', NaN, ...
+        'BasinIsRastrigin', NaN, ...
         'EnsembleEvaluations', NaN, ...
         'EnsembleImprovements', NaN, ...
         'ET_MAE', NaN, ...
@@ -461,6 +467,13 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         fprintf(fileID,'BasinUseArchive %d\n',RunSummary.BasinUseArchive);
         fprintf(fileID,'BasinAdaptiveOperators %d\n',RunSummary.BasinAdaptiveOperators);
         fprintf(fileID,'BasinRandomHopSelection %d\n',RunSummary.BasinRandomHopSelection);
+    end
+    if isfield(RunSummary,'BasinTriggers')
+        fprintf(fileID,'BasinIsRastrigin %d\n',RunSummary.BasinIsRastrigin);
+        fprintf(fileID,'BasinTriggers %d\n',RunSummary.BasinTriggers);
+        fprintf(fileID,'BasinRandomFallbacks %d\n',RunSummary.BasinRandomFallbacks);
+        fprintf(fileID,'BasinRastriginStagFE %d\n',RunSummary.BasinRastriginStagFE);
+        fprintf(fileID,'BasinOtherStagFE %d\n',RunSummary.BasinOtherStagFE);
     end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
