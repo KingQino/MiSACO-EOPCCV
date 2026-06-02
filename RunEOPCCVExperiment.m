@@ -181,15 +181,19 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.RBFEvaluations = RunSummary.RBFEvaluations;
     summary.RFEvaluations = RunSummary.RFEvaluations;
     summary.RandomEvaluations = RunSummary.RandomEvaluations;
+    summary.BasinHopEvaluations = GetSummaryField(RunSummary,'BasinHopEvaluations');
     summary.LocalSearchEvaluations = RunSummary.LocalSearchEvaluations;
     summary.RBFImprovements = RunSummary.RBFImprovements;
     summary.RFImprovements = RunSummary.RFImprovements;
     summary.RandomImprovements = RunSummary.RandomImprovements;
+    summary.BasinHopImprovements = GetSummaryField(RunSummary,'BasinHopImprovements');
     summary.LocalSearchImprovements = RunSummary.LocalSearchImprovements;
     summary.RBF_MAE = RunSummary.RBF_MAE;
     summary.RBF_RMSE = RunSummary.RBF_RMSE;
     summary.RF_MAE = RunSummary.RF_MAE;
     summary.RF_RMSE = RunSummary.RF_RMSE;
+    summary.BasinHop_MAE = GetSummaryField(RunSummary,'BasinHop_MAE');
+    summary.BasinHop_RMSE = GetSummaryField(RunSummary,'BasinHop_RMSE');
     summary.EnsembleEvaluations = GetSummaryField(RunSummary,'EnsembleEvaluations');
     summary.EnsembleImprovements = GetSummaryField(RunSummary,'EnsembleImprovements');
     summary.ET_MAE = GetSummaryField(RunSummary,'ET_MAE');
@@ -274,15 +278,19 @@ function summary = EmptySeedSummary()
         'RBFEvaluations', NaN, ...
         'RFEvaluations', NaN, ...
         'RandomEvaluations', NaN, ...
+        'BasinHopEvaluations', NaN, ...
         'LocalSearchEvaluations', NaN, ...
         'RBFImprovements', NaN, ...
         'RFImprovements', NaN, ...
         'RandomImprovements', NaN, ...
+        'BasinHopImprovements', NaN, ...
         'LocalSearchImprovements', NaN, ...
         'RBF_MAE', NaN, ...
         'RBF_RMSE', NaN, ...
         'RF_MAE', NaN, ...
         'RF_RMSE', NaN, ...
+        'BasinHop_MAE', NaN, ...
+        'BasinHop_RMSE', NaN, ...
         'EnsembleEvaluations', NaN, ...
         'EnsembleImprovements', NaN, ...
         'ET_MAE', NaN, ...
@@ -457,15 +465,25 @@ function WriteSeedSummaryFile(filePath, RunSummary)
     fprintf(fileID,'RBFEvaluations %d\n',RunSummary.RBFEvaluations);
     fprintf(fileID,'RFEvaluations %d\n',RunSummary.RFEvaluations);
     fprintf(fileID,'RandomEvaluations %d\n',RunSummary.RandomEvaluations);
+    if isfield(RunSummary,'BasinHopEvaluations')
+        fprintf(fileID,'BasinHopEvaluations %d\n',RunSummary.BasinHopEvaluations);
+    end
     fprintf(fileID,'LocalSearchEvaluations %d\n',RunSummary.LocalSearchEvaluations);
     fprintf(fileID,'RBFImprovements %d\n',RunSummary.RBFImprovements);
     fprintf(fileID,'RFImprovements %d\n',RunSummary.RFImprovements);
     fprintf(fileID,'RandomImprovements %d\n',RunSummary.RandomImprovements);
+    if isfield(RunSummary,'BasinHopImprovements')
+        fprintf(fileID,'BasinHopImprovements %d\n',RunSummary.BasinHopImprovements);
+    end
     fprintf(fileID,'LocalSearchImprovements %d\n',RunSummary.LocalSearchImprovements);
     fprintf(fileID,'RBF_MAE %.12g\n',RunSummary.RBF_MAE);
     fprintf(fileID,'RBF_RMSE %.12g\n',RunSummary.RBF_RMSE);
     fprintf(fileID,'RF_MAE %.12g\n',RunSummary.RF_MAE);
     fprintf(fileID,'RF_RMSE %.12g\n',RunSummary.RF_RMSE);
+    if isfield(RunSummary,'BasinHop_MAE')
+        fprintf(fileID,'BasinHop_MAE %.12g\n',RunSummary.BasinHop_MAE);
+        fprintf(fileID,'BasinHop_RMSE %.12g\n',RunSummary.BasinHop_RMSE);
+    end
     if isfield(RunSummary,'EnsembleEvaluations')
         fprintf(fileID,'EnsembleEvaluations %d\n',RunSummary.EnsembleEvaluations);
         fprintf(fileID,'EnsembleImprovements %d\n',RunSummary.EnsembleImprovements);
