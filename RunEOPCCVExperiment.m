@@ -132,6 +132,10 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     if hasAlignLog
         AlignLog = data.AlignLog;
     end
+    hasBasinAlignDB = isfield(data,'BasinAlignDB');
+    if hasBasinAlignDB
+        BasinAlignDB = data.BasinAlignDB;
+    end
     RunSummary.Algorithm    = algorithmName;
     RunSummary.Problem      = problemClass;
     RunSummary.Instance     = instanceName;
@@ -141,11 +145,14 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     RunSummary.OffspringN   = offspringN;
     RunSummary.BestDecision = bestX;
     RunSummary.SaveDetailedLogs = saveDetailedLogs;
+    saveVars = {'History','EvalLog','SurLog','RunSummary'};
     if hasAlignLog
-        save(historyFile,'History','EvalLog','SurLog','AlignLog','RunSummary');
-    else
-        save(historyFile,'History','EvalLog','SurLog','RunSummary');
+        saveVars{end+1} = 'AlignLog'; %#ok<AGROW>
     end
+    if hasBasinAlignDB
+        saveVars{end+1} = 'BasinAlignDB'; %#ok<AGROW>
+    end
+    save(historyFile,saveVars{:});
 
     WriteHistoryCsv(fullfile(seedDir,sprintf('evols.%s.csv',instanceName)),History);
     WriteSolutionFile(fullfile(seedDir,sprintf('solution.%s.txt',instanceName)), ...
@@ -197,6 +204,9 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.BasinTriggerAttempts = GetSummaryField(RunSummary,'BasinTriggerAttempts');
     summary.BasinTriggers = GetSummaryField(RunSummary,'BasinTriggers');
     summary.BasinVetoes = GetSummaryField(RunSummary,'BasinVetoes');
+    summary.BasinAlignmentSamples = GetSummaryField(RunSummary,'BasinAlignmentSamples');
+    summary.BasinAlignmentGuidedAttempts = GetSummaryField(RunSummary,'BasinAlignmentGuidedAttempts');
+    summary.BasinCandidateVetoes = GetSummaryField(RunSummary,'BasinCandidateVetoes');
     summary.BasinRandomFallbacks = GetSummaryField(RunSummary,'BasinRandomFallbacks');
     summary.BasinIsRastrigin = GetSummaryField(RunSummary,'BasinIsRastrigin');
     summary.EnsembleEvaluations = GetSummaryField(RunSummary,'EnsembleEvaluations');
@@ -299,6 +309,9 @@ function summary = EmptySeedSummary()
         'BasinTriggerAttempts', NaN, ...
         'BasinTriggers', NaN, ...
         'BasinVetoes', NaN, ...
+        'BasinAlignmentSamples', NaN, ...
+        'BasinAlignmentGuidedAttempts', NaN, ...
+        'BasinCandidateVetoes', NaN, ...
         'BasinRandomFallbacks', NaN, ...
         'BasinIsRastrigin', NaN, ...
         'EnsembleEvaluations', NaN, ...
@@ -477,10 +490,17 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         WriteOptionalSummaryField(fileID,RunSummary,'BasinTriggerAttempts','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinTriggers','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinVetoes','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinAlignmentSamples','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinAlignmentGuidedAttempts','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinCandidateVetoes','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinRandomFallbacks','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinRastriginStagFE','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinOtherStagFE','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinPredImprovementTol','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinErrorMarginK','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinVetoQuantile','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinMinAlign','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinRBFAnomalyWeight','%.12g');
     end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);

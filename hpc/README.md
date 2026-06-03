@@ -85,6 +85,17 @@ MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
 ```
 
+Recommended MiSACOBasinST3 command:
+
+```bash
+MISACO_ALGORITHM=MiSACOBasinST3 \
+MISACOBASINST3_ABLATION=conservative_veto \
+STATS_NAME=stats_01 \
+MAX_PARALLEL=100 \
+MEM_PER_CPU=4G \
+bash hpc/submit_array.sh
+```
+
 Use a new `STATS_NAME` for each experiment batch, for example `stats_01`,
 `stats_02`, or `stats_rastrigin_ablation`. By default, results go to
 `<Algorithm>/<STATS_NAME>`. To intentionally use a custom path, set both
