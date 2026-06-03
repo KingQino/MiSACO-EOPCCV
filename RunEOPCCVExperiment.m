@@ -189,11 +189,13 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.RFEvaluations = RunSummary.RFEvaluations;
     summary.RandomEvaluations = RunSummary.RandomEvaluations;
     summary.BasinHopEvaluations = GetSummaryField(RunSummary,'BasinHopEvaluations');
+    summary.BasinHopExploreEvaluations = GetSummaryField(RunSummary,'BasinHopExploreEvaluations');
     summary.LocalSearchEvaluations = RunSummary.LocalSearchEvaluations;
     summary.RBFImprovements = RunSummary.RBFImprovements;
     summary.RFImprovements = RunSummary.RFImprovements;
     summary.RandomImprovements = RunSummary.RandomImprovements;
     summary.BasinHopImprovements = GetSummaryField(RunSummary,'BasinHopImprovements');
+    summary.BasinHopExploreImprovements = GetSummaryField(RunSummary,'BasinHopExploreImprovements');
     summary.LocalSearchImprovements = RunSummary.LocalSearchImprovements;
     summary.RBF_MAE = RunSummary.RBF_MAE;
     summary.RBF_RMSE = RunSummary.RBF_RMSE;
@@ -201,9 +203,12 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.RF_RMSE = RunSummary.RF_RMSE;
     summary.BasinHop_MAE = GetSummaryField(RunSummary,'BasinHop_MAE');
     summary.BasinHop_RMSE = GetSummaryField(RunSummary,'BasinHop_RMSE');
+    summary.BasinHopExplore_MAE = GetSummaryField(RunSummary,'BasinHopExplore_MAE');
+    summary.BasinHopExplore_RMSE = GetSummaryField(RunSummary,'BasinHopExplore_RMSE');
     summary.BasinTriggerAttempts = GetSummaryField(RunSummary,'BasinTriggerAttempts');
     summary.BasinTriggers = GetSummaryField(RunSummary,'BasinTriggers');
     summary.BasinVetoes = GetSummaryField(RunSummary,'BasinVetoes');
+    summary.BasinExploreTriggers = GetSummaryField(RunSummary,'BasinExploreTriggers');
     summary.BasinAlignmentSamples = GetSummaryField(RunSummary,'BasinAlignmentSamples');
     summary.BasinAlignmentGuidedAttempts = GetSummaryField(RunSummary,'BasinAlignmentGuidedAttempts');
     summary.BasinCandidateVetoes = GetSummaryField(RunSummary,'BasinCandidateVetoes');
@@ -294,11 +299,13 @@ function summary = EmptySeedSummary()
         'RFEvaluations', NaN, ...
         'RandomEvaluations', NaN, ...
         'BasinHopEvaluations', NaN, ...
+        'BasinHopExploreEvaluations', NaN, ...
         'LocalSearchEvaluations', NaN, ...
         'RBFImprovements', NaN, ...
         'RFImprovements', NaN, ...
         'RandomImprovements', NaN, ...
         'BasinHopImprovements', NaN, ...
+        'BasinHopExploreImprovements', NaN, ...
         'LocalSearchImprovements', NaN, ...
         'RBF_MAE', NaN, ...
         'RBF_RMSE', NaN, ...
@@ -306,9 +313,12 @@ function summary = EmptySeedSummary()
         'RF_RMSE', NaN, ...
         'BasinHop_MAE', NaN, ...
         'BasinHop_RMSE', NaN, ...
+        'BasinHopExplore_MAE', NaN, ...
+        'BasinHopExplore_RMSE', NaN, ...
         'BasinTriggerAttempts', NaN, ...
         'BasinTriggers', NaN, ...
         'BasinVetoes', NaN, ...
+        'BasinExploreTriggers', NaN, ...
         'BasinAlignmentSamples', NaN, ...
         'BasinAlignmentGuidedAttempts', NaN, ...
         'BasinCandidateVetoes', NaN, ...
@@ -490,6 +500,7 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         WriteOptionalSummaryField(fileID,RunSummary,'BasinTriggerAttempts','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinTriggers','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinVetoes','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinExploreTriggers','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinAlignmentSamples','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinAlignmentGuidedAttempts','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinCandidateVetoes','%d');
@@ -501,6 +512,9 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         WriteOptionalSummaryField(fileID,RunSummary,'BasinVetoQuantile','%.12g');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinMinAlign','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinRBFAnomalyWeight','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinExploreAfterVetoes','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinExploreCooldownFE','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'BasinExploreStagFE','%d');
     end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
@@ -514,12 +528,18 @@ function WriteSeedSummaryFile(filePath, RunSummary)
     if isfield(RunSummary,'BasinHopEvaluations')
         fprintf(fileID,'BasinHopEvaluations %d\n',RunSummary.BasinHopEvaluations);
     end
+    if isfield(RunSummary,'BasinHopExploreEvaluations')
+        fprintf(fileID,'BasinHopExploreEvaluations %d\n',RunSummary.BasinHopExploreEvaluations);
+    end
     fprintf(fileID,'LocalSearchEvaluations %d\n',RunSummary.LocalSearchEvaluations);
     fprintf(fileID,'RBFImprovements %d\n',RunSummary.RBFImprovements);
     fprintf(fileID,'RFImprovements %d\n',RunSummary.RFImprovements);
     fprintf(fileID,'RandomImprovements %d\n',RunSummary.RandomImprovements);
     if isfield(RunSummary,'BasinHopImprovements')
         fprintf(fileID,'BasinHopImprovements %d\n',RunSummary.BasinHopImprovements);
+    end
+    if isfield(RunSummary,'BasinHopExploreImprovements')
+        fprintf(fileID,'BasinHopExploreImprovements %d\n',RunSummary.BasinHopExploreImprovements);
     end
     fprintf(fileID,'LocalSearchImprovements %d\n',RunSummary.LocalSearchImprovements);
     fprintf(fileID,'RBF_MAE %.12g\n',RunSummary.RBF_MAE);
@@ -529,6 +549,10 @@ function WriteSeedSummaryFile(filePath, RunSummary)
     if isfield(RunSummary,'BasinHop_MAE')
         fprintf(fileID,'BasinHop_MAE %.12g\n',RunSummary.BasinHop_MAE);
         fprintf(fileID,'BasinHop_RMSE %.12g\n',RunSummary.BasinHop_RMSE);
+    end
+    if isfield(RunSummary,'BasinHopExplore_MAE')
+        fprintf(fileID,'BasinHopExplore_MAE %.12g\n',RunSummary.BasinHopExplore_MAE);
+        fprintf(fileID,'BasinHopExplore_RMSE %.12g\n',RunSummary.BasinHopExplore_RMSE);
     end
     if isfield(RunSummary,'EnsembleEvaluations')
         fprintf(fileID,'EnsembleEvaluations %d\n',RunSummary.EnsembleEvaluations);
