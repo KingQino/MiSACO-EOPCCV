@@ -230,10 +230,19 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.MSLocalStartAttempts = GetSummaryField(RunSummary,'MSLocalStartAttempts');
     summary.MSLocalSurrogateAttempts = GetSummaryField(RunSummary,'MSLocalSurrogateAttempts');
     summary.MSLocalCandidates = GetSummaryField(RunSummary,'MSLocalCandidates');
+    summary.MSLocalBestCandidates = GetSummaryField(RunSummary,'MSLocalBestCandidates');
+    summary.MSLocalMultiCandidates = GetSummaryField(RunSummary,'MSLocalMultiCandidates');
+    summary.MSLocalGatedCandidates = GetSummaryField(RunSummary,'MSLocalGatedCandidates');
     summary.MSLocalSuccesses = GetSummaryField(RunSummary,'MSLocalSuccesses');
+    summary.MSLocalSwitches = GetSummaryField(RunSummary,'MSLocalSwitches');
+    summary.MSLocalFallbacks = GetSummaryField(RunSummary,'MSLocalFallbacks');
+    summary.MSLocalSkippedByGate = GetSummaryField(RunSummary,'MSLocalSkippedByGate');
     summary.MSLocalMeanSelectedPred = GetSummaryField(RunSummary,'MSLocalMeanSelectedPred');
+    summary.MSLocalMeanSelectedPredStart = GetSummaryField(RunSummary,'MSLocalMeanSelectedPredStart');
+    summary.MSLocalMeanSelectedPredImprovement = GetSummaryField(RunSummary,'MSLocalMeanSelectedPredImprovement');
     summary.MSLocalMeanSelectedNovelty = GetSummaryField(RunSummary,'MSLocalMeanSelectedNovelty');
     summary.MSLocalMeanSelectedStartObjective = GetSummaryField(RunSummary,'MSLocalMeanSelectedStartObjective');
+    summary.MSLocalBestStartSelectionRate = GetSummaryField(RunSummary,'MSLocalBestStartSelectionRate');
 
     clear cleanup;
 end
@@ -347,10 +356,19 @@ function summary = EmptySeedSummary()
         'MSLocalStartAttempts', NaN, ...
         'MSLocalSurrogateAttempts', NaN, ...
         'MSLocalCandidates', NaN, ...
+        'MSLocalBestCandidates', NaN, ...
+        'MSLocalMultiCandidates', NaN, ...
+        'MSLocalGatedCandidates', NaN, ...
         'MSLocalSuccesses', NaN, ...
+        'MSLocalSwitches', NaN, ...
+        'MSLocalFallbacks', NaN, ...
+        'MSLocalSkippedByGate', NaN, ...
         'MSLocalMeanSelectedPred', NaN, ...
+        'MSLocalMeanSelectedPredStart', NaN, ...
+        'MSLocalMeanSelectedPredImprovement', NaN, ...
         'MSLocalMeanSelectedNovelty', NaN, ...
-        'MSLocalMeanSelectedStartObjective', NaN);
+        'MSLocalMeanSelectedStartObjective', NaN, ...
+        'MSLocalBestStartSelectionRate', NaN);
 end
 
 
@@ -534,10 +552,19 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalStartAttempts','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalSurrogateAttempts','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalCandidates','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalBestCandidates','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMultiCandidates','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalGatedCandidates','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalSuccesses','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalSwitches','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalFallbacks','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalSkippedByGate','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedPred','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedPredStart','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedPredImprovement','%.12g');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedNovelty','%.12g');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedStartObjective','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalBestStartSelectionRate','%.12g');
     end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
