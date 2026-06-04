@@ -3,6 +3,7 @@
 
 # Generated HPC experiment outputs
 MiSACO/stats*/
+MiSACOMSLS/stats*/
 MiSACOBasin/stats*/
 MiSACOBasinST/stats*/
 MiSACOBasinST2/stats*/

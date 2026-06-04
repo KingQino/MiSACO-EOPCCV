@@ -227,6 +227,13 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.AlignmentFallbackEvaluations = GetSummaryField(RunSummary,'AlignmentFallbackEvaluations');
     summary.AlignmentError_MAE = GetSummaryField(RunSummary,'AlignmentError_MAE');
     summary.AlignmentError_RMSE = GetSummaryField(RunSummary,'AlignmentError_RMSE');
+    summary.MSLocalStartAttempts = GetSummaryField(RunSummary,'MSLocalStartAttempts');
+    summary.MSLocalSurrogateAttempts = GetSummaryField(RunSummary,'MSLocalSurrogateAttempts');
+    summary.MSLocalCandidates = GetSummaryField(RunSummary,'MSLocalCandidates');
+    summary.MSLocalSuccesses = GetSummaryField(RunSummary,'MSLocalSuccesses');
+    summary.MSLocalMeanSelectedPred = GetSummaryField(RunSummary,'MSLocalMeanSelectedPred');
+    summary.MSLocalMeanSelectedNovelty = GetSummaryField(RunSummary,'MSLocalMeanSelectedNovelty');
+    summary.MSLocalMeanSelectedStartObjective = GetSummaryField(RunSummary,'MSLocalMeanSelectedStartObjective');
 
     clear cleanup;
 end
@@ -336,7 +343,14 @@ function summary = EmptySeedSummary()
         'AlignmentGuidedEvaluations', NaN, ...
         'AlignmentFallbackEvaluations', NaN, ...
         'AlignmentError_MAE', NaN, ...
-        'AlignmentError_RMSE', NaN);
+        'AlignmentError_RMSE', NaN, ...
+        'MSLocalStartAttempts', NaN, ...
+        'MSLocalSurrogateAttempts', NaN, ...
+        'MSLocalCandidates', NaN, ...
+        'MSLocalSuccesses', NaN, ...
+        'MSLocalMeanSelectedPred', NaN, ...
+        'MSLocalMeanSelectedNovelty', NaN, ...
+        'MSLocalMeanSelectedStartObjective', NaN);
 end
 
 
@@ -515,6 +529,15 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         WriteOptionalSummaryField(fileID,RunSummary,'BasinExploreAfterVetoes','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinExploreCooldownFE','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'BasinExploreStagFE','%d');
+    end
+    if isfield(RunSummary,'MSLocalStartAttempts')
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalStartAttempts','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalSurrogateAttempts','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalCandidates','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalSuccesses','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedPred','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedNovelty','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedStartObjective','%.12g');
     end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
