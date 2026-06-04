@@ -64,6 +64,16 @@ MEM_PER_CPU=4G \
 bash hpc/submit_array.sh
 ```
 
+Recommended MiSACOMixLS command:
+
+```bash
+MISACO_ALGORITHM=MiSACOMixLS \
+STATS_NAME=stats_01 \
+MAX_PARALLEL=100 \
+MEM_PER_CPU=4G \
+bash hpc/submit_array.sh
+```
+
 Recommended MiSACOBasin command:
 
 ```bash

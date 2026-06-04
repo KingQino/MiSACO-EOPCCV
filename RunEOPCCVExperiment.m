@@ -243,6 +243,16 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.MSLocalMeanSelectedNovelty = GetSummaryField(RunSummary,'MSLocalMeanSelectedNovelty');
     summary.MSLocalMeanSelectedStartObjective = GetSummaryField(RunSummary,'MSLocalMeanSelectedStartObjective');
     summary.MSLocalBestStartSelectionRate = GetSummaryField(RunSummary,'MSLocalBestStartSelectionRate');
+    summary.MixLSAttempts = GetSummaryField(RunSummary,'MixLSAttempts');
+    summary.MixLSBaselineCandidates = GetSummaryField(RunSummary,'MixLSBaselineCandidates');
+    summary.MixLSDiscreteCandidates = GetSummaryField(RunSummary,'MixLSDiscreteCandidates');
+    summary.MixLSTotalCandidates = GetSummaryField(RunSummary,'MixLSTotalCandidates');
+    summary.MixLSSelectedBaseline = GetSummaryField(RunSummary,'MixLSSelectedBaseline');
+    summary.MixLSSelectedMixed = GetSummaryField(RunSummary,'MixLSSelectedMixed');
+    summary.MixLSSkipped = GetSummaryField(RunSummary,'MixLSSkipped');
+    summary.MixLSMeanSelectedPred = GetSummaryField(RunSummary,'MixLSMeanSelectedPred');
+    summary.MixLSMeanSelectedNovelty = GetSummaryField(RunSummary,'MixLSMeanSelectedNovelty');
+    summary.MixLSMixedSelectionRate = GetSummaryField(RunSummary,'MixLSMixedSelectionRate');
 
     clear cleanup;
 end
@@ -368,7 +378,17 @@ function summary = EmptySeedSummary()
         'MSLocalMeanSelectedPredImprovement', NaN, ...
         'MSLocalMeanSelectedNovelty', NaN, ...
         'MSLocalMeanSelectedStartObjective', NaN, ...
-        'MSLocalBestStartSelectionRate', NaN);
+        'MSLocalBestStartSelectionRate', NaN, ...
+        'MixLSAttempts', NaN, ...
+        'MixLSBaselineCandidates', NaN, ...
+        'MixLSDiscreteCandidates', NaN, ...
+        'MixLSTotalCandidates', NaN, ...
+        'MixLSSelectedBaseline', NaN, ...
+        'MixLSSelectedMixed', NaN, ...
+        'MixLSSkipped', NaN, ...
+        'MixLSMeanSelectedPred', NaN, ...
+        'MixLSMeanSelectedNovelty', NaN, ...
+        'MixLSMixedSelectionRate', NaN);
 end
 
 
@@ -565,6 +585,18 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedNovelty','%.12g');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalMeanSelectedStartObjective','%.12g');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalBestStartSelectionRate','%.12g');
+    end
+    if isfield(RunSummary,'MixLSAttempts')
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSAttempts','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSBaselineCandidates','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSDiscreteCandidates','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSTotalCandidates','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSSelectedBaseline','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSSelectedMixed','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSSkipped','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSMeanSelectedPred','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSMeanSelectedNovelty','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'MixLSMixedSelectionRate','%.12g');
     end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
