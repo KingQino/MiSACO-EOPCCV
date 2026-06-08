@@ -253,6 +253,7 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     summary.MSLocalAdaptiveGoodRateTriggers = GetSummaryField(RunSummary,'MSLocalAdaptiveGoodRateTriggers');
     summary.MSLocalAdaptiveLowRateBlocks = GetSummaryField(RunSummary,'MSLocalAdaptiveLowRateBlocks');
     summary.MSLocalAdaptiveRescueModes = GetSummaryField(RunSummary,'MSLocalAdaptiveRescueModes');
+    summary.MSLocalAdaptiveRescueCooldownModes = GetSummaryField(RunSummary,'MSLocalAdaptiveRescueCooldownModes');
     summary.MSLocalAdaptiveMeanRecentRate = GetSummaryField(RunSummary,'MSLocalAdaptiveMeanRecentRate');
     summary.MSLocalAdaptiveMeanStagnationFE = GetSummaryField(RunSummary,'MSLocalAdaptiveMeanStagnationFE');
     summary.MixLSAttempts = GetSummaryField(RunSummary,'MixLSAttempts');
@@ -401,6 +402,7 @@ function summary = EmptySeedSummary()
         'MSLocalAdaptiveGoodRateTriggers', NaN, ...
         'MSLocalAdaptiveLowRateBlocks', NaN, ...
         'MSLocalAdaptiveRescueModes', NaN, ...
+        'MSLocalAdaptiveRescueCooldownModes', NaN, ...
         'MSLocalAdaptiveMeanRecentRate', NaN, ...
         'MSLocalAdaptiveMeanStagnationFE', NaN, ...
         'MixLSAttempts', NaN, ...
@@ -615,6 +617,7 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalAdaptiveGoodRateTriggers','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalAdaptiveLowRateBlocks','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalAdaptiveRescueModes','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'MSLocalAdaptiveRescueCooldownModes','%d');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalAdaptiveMeanRecentRate','%.12g');
         WriteOptionalSummaryField(fileID,RunSummary,'MSLocalAdaptiveMeanStagnationFE','%.12g');
     end
