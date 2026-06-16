@@ -726,6 +726,26 @@ function WriteSeedSummaryFile(filePath, RunSummary)
         WriteOptionalSummaryField(fileID,RunSummary,'MixLSMeanSelectedNovelty','%.12g');
         WriteOptionalSummaryField(fileID,RunSummary,'MixLSMixedSelectionRate','%.12g');
     end
+    if isfield(RunSummary,'SoftScoreRBFSelections')
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFSelections','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFSelections','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFFallbacks','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFFallbacks','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFChanged','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFChanged','%d');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFChangeRate','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFChangeRate','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFMeanPredRank','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFMeanPredRank','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFMeanEvidence','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFMeanEvidence','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFMeanNovelty','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFMeanNovelty','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFMeanUncertainty','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFMeanUncertainty','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRBFMeanSameCategoryCount','%.12g');
+        WriteOptionalSummaryField(fileID,RunSummary,'SoftScoreRFMeanSameCategoryCount','%.12g');
+    end
     fprintf(fileID,'Problem %s\n',RunSummary.Problem);
     fprintf(fileID,'Seed %d\n',RunSummary.Seed);
     fprintf(fileID,'BestObjective %.12g\n',RunSummary.BestObjective);
