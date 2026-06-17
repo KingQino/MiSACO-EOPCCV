@@ -128,14 +128,31 @@ status=$?
 
 if [[ $status -ne 0 ]]; then
     echo "MATLAB exited with status $status; see $log_file" >&2
+    if [[ -s "$log_file" ]]; then
+        echo "Last 80 lines from $log_file:" >&2
+        tail -80 "$log_file" >&2
+    fi
     echo "1e6"
     exit 0
 fi
 
 if [[ ! -s "$cost_file" ]]; then
     echo "Missing cost file $cost_file; see $log_file" >&2
+    if [[ -s "$log_file" ]]; then
+        echo "Last 80 lines from $log_file:" >&2
+        tail -80 "$log_file" >&2
+    fi
     echo "1e6"
     exit 0
 fi
 
-tail -n 1 "$cost_file"
+cost_value="$(tail -n 1 "$cost_file")"
+if [[ "$cost_value" == "1000000" || "$cost_value" == "1000000.0" || "$cost_value" == "1e6" ]]; then
+    echo "Penalty cost returned; see $log_file" >&2
+    if [[ -s "$log_file" ]]; then
+        echo "Last 80 lines from $log_file:" >&2
+        tail -80 "$log_file" >&2
+    fi
+fi
+
+echo "$cost_value"
