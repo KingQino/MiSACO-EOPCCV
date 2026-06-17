@@ -274,7 +274,7 @@ classdef MiSACOMSLS5 < ALGORITHM
 	        local_up = max(local_r);
 	        local_dn = min(local_r);
 	        attempted = attempted + 1;
-	        [xrLocal,localSuccess] = Local_Search(local_r,local_f,local_up,local_dn,start_r);
+	        [xrLocal,localSuccess] = CallLocalSearch(local_r,local_f,local_up,local_dn,start_r);
 	        if ~localSuccess
 	            continue;
 	        end
@@ -364,6 +364,29 @@ classdef MiSACOMSLS5 < ALGORITHM
 	    info.SelectedNovelty = noveltyValues(idBest);
 	    info.SelectedStartObjective = startObjectives(idBest);
 	    info.SelectedFromBestStart = isBestStart(idBest);
+	end
+
+	function [xrLocal,localSuccess] = CallLocalSearch(local_r,local_f,local_up,local_dn,start_r)
+	    try
+	        [xrLocal,localSuccess] = Local_Search(local_r,local_f,local_up,local_dn,start_r);
+	    catch err
+	        if contains(err.message,'Too many output arguments')
+	            try
+	                xrLocal = Local_Search(local_r,local_f,local_up,local_dn,start_r);
+	                localSuccess = ~isempty(xrLocal) && all(isfinite(xrLocal(:)));
+	            catch innerErr
+	                warning('MiSACOMSLS5:LocalSearchFailed', ...
+	                    'Local_Search fallback failed: %s',innerErr.message);
+	                xrLocal = [];
+	                localSuccess = false;
+	            end
+	        else
+	            warning('MiSACOMSLS5:LocalSearchFailed', ...
+	                'Local_Search failed: %s',err.message);
+	            xrLocal = [];
+	            localSuccess = false;
+	        end
+	    end
 	end
 	
 	function startIdx = SelectLocalStartIndices(Train_x,Train_y,Problem,startCount,elitePool)
