@@ -9,6 +9,6 @@ firstTest = 5
 logFile = "./irace.Rdata"
 
 # Parallel execution
-parallel = 48
+parallel = 128
 loadBalancing = 1
 blockSize = 1

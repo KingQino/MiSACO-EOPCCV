@@ -52,9 +52,9 @@ function cost = RunIRACETrialFromEnv()
         setenv('MISACO_ALGORITHM_PARAMS',sprintf('%.17g ',params));
         cleanup = onCleanup(@() RestoreEnv(oldDetailed,oldWriteStats,oldParams));
 
-        summary = RunEOPCCVExperiment(problemId,seed,maxFE,params(1),params(2), ...
+        RunEOPCCVExperiment(problemId,seed,maxFE,params(1),params(2), ...
             runRoot,1,algorithmName,params);
-        candidateObj = summary.MeanBestObjective;
+        candidateObj = ReadCandidateObjective(runRoot,problemId,seed);
         baselineObj = ReadBaselineObjective(baselineRoot,problemId,seed);
 
         cost = log((candidateObj + tau)./(baselineObj + tau));
@@ -73,6 +73,34 @@ function cost = RunIRACETrialFromEnv()
             fprintf(2,'  at %s:%d\n',err.stack(k).file,err.stack(k).line);
         end
         WriteCostFile(costFile,cost);
+    end
+end
+
+
+function value = ReadCandidateObjective(runRoot,problemId,seed)
+    instanceName = sprintf('F%d',problemId);
+    historyFile = fullfile(runRoot,instanceName,num2str(seed), ...
+        sprintf('history.%s.seed%d.mat',instanceName,seed));
+    if ~isfile(historyFile)
+        error('RunIRACETrialFromEnv:MissingCandidateHistory', ...
+            'Missing candidate history file: %s', historyFile);
+    end
+
+    data = load(historyFile);
+    if isfield(data,'RunSummary') && isfield(data.RunSummary,'BestObjective')
+        value = data.RunSummary.BestObjective;
+    elseif isfield(data,'EvalLog') && isfield(data.EvalLog,'Obj') && ...
+            ~isempty(data.EvalLog.Obj)
+        value = min(data.EvalLog.Obj(:));
+    else
+        error('RunIRACETrialFromEnv:InvalidCandidateHistory', ...
+            'Candidate history file does not contain RunSummary.BestObjective or EvalLog.Obj: %s', ...
+            historyFile);
+    end
+
+    if ~isfinite(value)
+        error('RunIRACETrialFromEnv:InvalidCandidateObjective', ...
+            'Candidate objective is not finite for F%d seed %d.', problemId, seed);
     end
 end
 

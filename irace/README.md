@@ -76,8 +76,9 @@ builds exit silently when `-nodisplay` or `-singleCompThread` is combined with
 `-batch`.
 
 Increase `maxExperiments` in `scenario.txt` when running a serious tuning job.
-The current scenario uses `parallel = 48`, `loadBalancing = 1`, and
+The current scenario uses `parallel = 128`, `loadBalancing = 1`, and
 `blockSize = 1`.  Make sure the IRACE job allocation has enough CPU and memory
-for 48 simultaneous MATLAB workers.  For a first HPC pass, 300-600 experiments
+for 128 simultaneous MATLAB workers.  The provided `submit_irace.slurm`
+requests 128 CPUs and 3 GB per CPU.  For a first HPC pass, 300-600 experiments
 is a reasonable start.  Final validation should still run the selected
 configurations on F1-F30, seeds 1-10.
