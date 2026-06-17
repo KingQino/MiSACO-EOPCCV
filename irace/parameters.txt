@@ -8,3 +8,6 @@ localSwitchStartTol     "--local-switch-start-tol "    r (0.100, 0.500)
 localGoodRate           "--local-good-rate "           r (0.350, 0.700)
 localBadRate            "--local-bad-rate "            r (0.050, 0.250)
 localStagFE             "--local-stag-fe "             i (15, 60)
+
+[global]
+digits = 2

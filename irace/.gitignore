@@ -3,3 +3,8 @@ logs/
 costs/
 *.Rdata
 *.Rout
+best-config.txt
+all-configs.csv
+last-generation.csv
+experiment-log.csv
+.DS_Store

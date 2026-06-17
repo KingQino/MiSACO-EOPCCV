@@ -54,7 +54,7 @@ From the `irace` directory:
 
 ```bash
 cd irace
-irace --scenario scenario.txt
+Rscript run_irace.R
 ```
 
 Useful environment overrides:
@@ -76,5 +76,8 @@ builds exit silently when `-nodisplay` or `-singleCompThread` is combined with
 `-batch`.
 
 Increase `maxExperiments` in `scenario.txt` when running a serious tuning job.
-For a first HPC pass, 300-600 experiments is a reasonable start.  Final
-validation should still run the selected configurations on F1-F30, seeds 1-10.
+The current scenario uses `parallel = 48`, `loadBalancing = 1`, and
+`blockSize = 1`.  Make sure the IRACE job allocation has enough CPU and memory
+for 48 simultaneous MATLAB workers.  For a first HPC pass, 300-600 experiments
+is a reasonable start.  Final validation should still run the selected
+configurations on F1-F30, seeds 1-10.
