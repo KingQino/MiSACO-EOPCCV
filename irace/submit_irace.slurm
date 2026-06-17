@@ -7,7 +7,7 @@
 #SBATCH --time=240:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=128
+#SBATCH --cpus-per-task=96
 #SBATCH --mem-per-cpu=3G
 
 set -euo pipefail
@@ -29,7 +29,7 @@ export MISACO_IRACE_BASELINE_ROOT="${MISACO_IRACE_BASELINE_ROOT:-/data/home/exx8
 export MISACO_IRACE_STATS_ROOT="${MISACO_IRACE_STATS_ROOT:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/runs}"
 export MISACO_IRACE_LOG_DIR="${MISACO_IRACE_LOG_DIR:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/logs}"
 export MISACO_IRACE_COST_DIR="${MISACO_IRACE_COST_DIR:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/costs}"
-export MISACO_IRACE_MAX_FE="${MISACO_IRACE_MAX_FE:-600}"
+export MISACO_IRACE_MAX_FE="${MISACO_IRACE_MAX_FE:-300}"
 export MISACO_IRACE_TAU="${MISACO_IRACE_TAU:-1e-6}"
 
 cd /data/home/exx866/Matlab/MiSACO-EOPCCV/irace

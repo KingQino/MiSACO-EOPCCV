@@ -1,13 +1,13 @@
-localStartCount         "--local-start-count "         i (3, 10)
-localElitePool          "--local-elite-pool "          i (15, 60)
-localMinSampleFactor    "--local-min-sample-factor "   i (3, 8)
-localNeighborCount      "--local-neighbor-count "      i (15, 60)
-localPredImproveTol     "--local-pred-improve-tol "    r (0.000, 0.030)
-localSwitchMargin       "--local-switch-margin "       r (0.020, 0.150)
-localSwitchStartTol     "--local-switch-start-tol "    r (0.100, 0.500)
-localGoodRate           "--local-good-rate "           r (0.350, 0.700)
-localBadRate            "--local-bad-rate "            r (0.050, 0.250)
-localStagFE             "--local-stag-fe "             i (15, 60)
+localStartCount         "--local-start-count "         i (4, 10)
+localElitePool          "--local-elite-pool "          i (25, 70)
+localMinSampleFactor    "--local-min-sample-factor "   i (3, 6)
+localNeighborCount      "--local-neighbor-count "      i (30, 90)
+localPredImproveTol     "--local-pred-improve-tol "    r (0.005, 0.040)
+localSwitchMargin       "--local-switch-margin "       r (0.050, 0.180)
+localSwitchStartTol     "--local-switch-start-tol "    r (0.150, 0.600)
+localGoodRate           "--local-good-rate "           r (0.500, 0.850)
+localBadRate            "--local-bad-rate "            r (0.080, 0.300)
+localStagFE             "--local-stag-fe "             i (20, 55)
 
 [global]
 digits = 2
