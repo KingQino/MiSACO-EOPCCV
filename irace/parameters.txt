@@ -10,4 +10,4 @@ localBadRate            "--local-bad-rate "            r (0.080, 0.300)
 localStagFE             "--local-stag-fe "             i (20, 55)
 
 [global]
-digits = 2
+digits = 3
