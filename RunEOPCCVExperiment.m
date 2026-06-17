@@ -1,4 +1,4 @@
-function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN, offspringN, statsRoot, numWorkers, algorithmName)
+function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN, offspringN, statsRoot, numWorkers, algorithmName, algorithmParams)
 %RunEOPCCVExperiment Run one EOPCCV problem for multiple random seeds.
 
     if nargin < 2 || isempty(seeds)
@@ -21,6 +21,20 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
     end
     if nargin < 8 || isempty(algorithmName)
         algorithmName = ReadStringEnv('MISACO_ALGORITHM', 'MiSACO');
+    end
+    if nargin < 9 || isempty(algorithmParams)
+        algorithmParams = ReadNumericVectorEnv('MISACO_ALGORITHM_PARAMS', []);
+    end
+    if isempty(algorithmParams)
+        algorithmParams = [parentN, offspringN];
+    else
+        algorithmParams = algorithmParams(:)';
+        if numel(algorithmParams) < 2
+            error('RunEOPCCVExperiment:InvalidAlgorithmParams', ...
+                'Algorithm parameter vector must contain at least parentN and offspringN.');
+        end
+        parentN = algorithmParams(1);
+        offspringN = algorithmParams(2);
     end
 
     problemNumber = ParseProblemId(problemId);
@@ -63,7 +77,8 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
             seedDir = fullfile(instanceDir,num2str(seed));
             EnsureFolder(seedDir);
             seedSummaries(k) = RunSingleSeed(problemHandle, problemClass, ...
-                instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs, algorithmName);
+                instanceName, seed, maxFE, parentN, offspringN, seedDir, ...
+                saveDetailedLogs, algorithmName, algorithmParams);
         end
     else
         fprintf('Running seeds serially.\n');
@@ -72,7 +87,8 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
             seedDir = fullfile(instanceDir,num2str(seed));
             EnsureFolder(seedDir);
             seedSummaries(k) = RunSingleSeed(problemHandle, problemClass, ...
-                instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs, algorithmName);
+                instanceName, seed, maxFE, parentN, offspringN, seedDir, ...
+                saveDetailedLogs, algorithmName, algorithmParams);
         end
     end
 
@@ -98,7 +114,7 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
 end
 
 
-function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs, algorithmName)
+function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed, maxFE, parentN, offspringN, seedDir, saveDetailedLogs, algorithmName, algorithmParams)
     historyFile = fullfile(seedDir, sprintf('history.%s.seed%d.mat', instanceName, seed));
     oldHistoryFile = getenv('MISACO_HISTORY_FILE');
     setenv('MISACO_HISTORY_FILE',historyFile);
@@ -109,7 +125,7 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
 
     Problem   = problemHandle('maxFE',maxFE);
     AlgorithmHandle = str2func(algorithmName);
-    Algorithm = AlgorithmHandle('parameter',{parentN,offspringN},'save',0);
+    Algorithm = AlgorithmHandle('parameter',num2cell(algorithmParams),'save',0);
     Algorithm.Solve(Problem);
 
     Population = Algorithm.result{end,2};
@@ -143,6 +159,7 @@ function summary = RunSingleSeed(problemHandle, problemClass, instanceName, seed
     RunSummary.MaxFE        = maxFE;
     RunSummary.ParentN      = parentN;
     RunSummary.OffspringN   = offspringN;
+    RunSummary.AlgorithmParams = algorithmParams;
     RunSummary.BestDecision = bestX;
     RunSummary.SaveDetailedLogs = saveDetailedLogs;
     saveVars = {'History','EvalLog','SurLog','RunSummary'};
@@ -504,6 +521,22 @@ function value = ReadIntegerEnv(name, defaultValue)
 end
 
 
+function value = ReadNumericVectorEnv(name, defaultValue)
+    rawValue = getenv(name);
+    if isempty(rawValue)
+        value = defaultValue;
+        return;
+    end
+
+    rawValue = strrep(rawValue,',',' ');
+    value = sscanf(rawValue,'%f').';
+    if isempty(value) || any(~isfinite(value))
+        error('RunEOPCCVExperiment:InvalidNumericVectorEnv', ...
+            'Environment variable %s must be a comma- or space-separated numeric vector.', name);
+    end
+end
+
+
 function value = ReadBooleanEnv(name, defaultValue)
     rawValue = getenv(name);
     if isempty(rawValue)
@@ -628,6 +661,11 @@ function WriteSeedSummaryFile(filePath, RunSummary)
     cleaner = onCleanup(@() fclose(fileID));
     if isfield(RunSummary,'Algorithm')
         fprintf(fileID,'Algorithm %s\n',RunSummary.Algorithm);
+    end
+    if isfield(RunSummary,'AlgorithmParams')
+        fprintf(fileID,'AlgorithmParams');
+        fprintf(fileID,' %.12g',RunSummary.AlgorithmParams);
+        fprintf(fileID,'\n');
     end
     if isfield(RunSummary,'BasinAblation')
         fprintf(fileID,'BasinAblation %s\n',RunSummary.BasinAblation);
