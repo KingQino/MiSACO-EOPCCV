@@ -12,10 +12,12 @@ log((candidateBestObjective + tau) / (baselineReference + tau))
 ```
 
 where `baselineReference` is the geometric mean of the ten baseline results
-for that problem in `MiSACOMSLS5/stats_01` (computed in `objective + tau`
-space). Negative values are better than the baseline reference, zero is equal,
-and positive values are worse. Set `MISACO_IRACE_BASELINE_AGGREGATE` to
-`mean` or `median` to use another reference.
+for that problem, stored in the tracked `baseline_references.csv` file
+(computed in `objective + tau` space). This keeps HPC tuning independent of
+the ignored `MiSACOMSLS5/stats_01` directory. Negative values are better than
+the baseline reference, zero is equal, and positive values are worse. Set
+`MISACO_IRACE_BASELINE_AGGREGATE` to `mean` or `median` to use another
+reference.
 
 For compatibility, a manually supplied instance such as `F12:3` still uses
 seed 3 and compares against baseline seed 3.
@@ -72,6 +74,7 @@ Useful environment overrides:
 ```bash
 export MATLAB_BIN=matlab
 export MISACO_PLATEMO_DIR=/path/to/PlatEMO/PlatEMO
+export MISACO_IRACE_BASELINE_FILE=/path/to/irace/baseline_references.csv
 export MISACO_IRACE_BASELINE_ROOT=/path/to/MiSACOMSLS5/stats_01
 export MISACO_IRACE_BASELINE_AGGREGATE=geometric
 export MISACO_IRACE_STATS_ROOT=/path/to/irace/runs

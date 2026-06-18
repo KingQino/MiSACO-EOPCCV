@@ -37,6 +37,8 @@ function cost = RunIRACETrialFromEnv()
             fullfile(projectRoot,'irace','runs'));
         baselineRoot = ReadStringEnv('MISACO_IRACE_BASELINE_ROOT', ...
             fullfile(projectRoot,'MiSACOMSLS5','stats_01'));
+        baselineFile = ReadStringEnv('MISACO_IRACE_BASELINE_FILE', ...
+            fullfile(projectRoot,'irace','baseline_references.csv'));
         baselineAggregate = ReadStringEnv('MISACO_IRACE_BASELINE_AGGREGATE', ...
             'geometric');
         tau = ReadDoubleEnv('MISACO_IRACE_TAU',1e-6);
@@ -63,7 +65,7 @@ function cost = RunIRACETrialFromEnv()
             baselineMode = 'matched-seed';
         else
             baselineObj = ReadBaselineReference( ...
-                baselineRoot,problemId,baselineAggregate,tau);
+                baselineFile,baselineRoot,problemId,baselineAggregate,tau);
             baselineMode = lower(strtrim(baselineAggregate));
         end
 
@@ -186,7 +188,40 @@ function value = ReadBaselineObjective(baselineRoot,problemId,seed)
 end
 
 
-function value = ReadBaselineReference(baselineRoot,problemId,aggregate,tau)
+function value = ReadBaselineReference(referenceFile,baselineRoot,problemId,aggregate,tau)
+    aggregate = lower(strtrim(aggregate));
+    if isfile(referenceFile)
+        T = readtable(referenceFile);
+        idx = find(T.ProblemId == problemId,1,'first');
+        if isempty(idx)
+            error('RunIRACETrialFromEnv:MissingBaselineReference', ...
+                'Baseline reference file %s does not contain F%d.', ...
+                referenceFile,problemId);
+        end
+
+        switch aggregate
+            case {'geometric','geomean','log-mean'}
+                storedTau = T.Tau(idx);
+                tolerance = max(1e-15,1e-9.*max(abs([storedTau,tau])));
+                if abs(storedTau - tau) > tolerance
+                    error('RunIRACETrialFromEnv:BaselineTauMismatch', ...
+                        ['Baseline reference file uses tau %.16g but the ' ...
+                        'current trial uses %.16g.'],storedTau,tau);
+                end
+                value = T.Geometric(idx);
+            case {'mean','arithmetic'}
+                value = T.Mean(idx);
+            case 'median'
+                value = T.Median(idx);
+            otherwise
+                error('RunIRACETrialFromEnv:InvalidBaselineAggregate', ...
+                    ['MISACO_IRACE_BASELINE_AGGREGATE must be geometric, ' ...
+                    'mean, or median; got "%s".'], aggregate);
+        end
+        ValidateBaselineReference(value,problemId,tau);
+        return;
+    end
+
     instanceName = sprintf('F%d',problemId);
     csvFile = fullfile(baselineRoot,instanceName,sprintf('stats.%s.csv',instanceName));
     if ~isfile(csvFile)
@@ -202,7 +237,7 @@ function value = ReadBaselineReference(baselineRoot,problemId,aggregate,tau)
             'Baseline objectives are invalid for F%d.', problemId);
     end
 
-    switch lower(strtrim(aggregate))
+    switch aggregate
         case {'geometric','geomean','log-mean'}
             value = exp(mean(log(values + tau))) - tau;
         case {'mean','arithmetic'}
@@ -215,6 +250,11 @@ function value = ReadBaselineReference(baselineRoot,problemId,aggregate,tau)
                 'mean, or median; got "%s".'], aggregate);
     end
 
+    ValidateBaselineReference(value,problemId,tau);
+end
+
+
+function ValidateBaselineReference(value,problemId,tau)
     if ~isfinite(value) || value + tau <= 0
         error('RunIRACETrialFromEnv:InvalidBaseline', ...
             'Baseline reference is invalid for F%d.', problemId);
