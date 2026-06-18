@@ -1,6 +1,9 @@
 runs/
 logs/
 costs/
+runs_allF_dynamic/
+logs_allF_dynamic/
+costs_allF_dynamic/
 *.Rdata
 *.Rout
 best-config.txt

@@ -1,5 +1,5 @@
 function cost = RunIRACETrialFromEnv()
-%RunIRACETrialFromEnv Evaluate one IRACE configuration on one fixed F:seed instance.
+%RunIRACETrialFromEnv Evaluate one IRACE configuration on one EOPCCV instance.
 
     projectRoot = ReadStringEnv('MISACO_PROJECT_ROOT', ...
         fileparts(fileparts(mfilename('fullpath'))));
@@ -17,7 +17,8 @@ function cost = RunIRACETrialFromEnv()
     costFile = ReadStringEnv('MISACO_IRACE_COST_FILE','');
     try
         instanceSpec = ReadStringEnv('MISACO_IRACE_INSTANCE','');
-        [problemId, seed] = ParseIRACEInstance(instanceSpec);
+        iraceSeedRaw = ReadStringEnv('MISACO_IRACE_SEED','');
+        [problemId, seed, seedSource] = ParseIRACEInstance(instanceSpec,iraceSeedRaw);
 
         params = ParseNumericVector(ReadStringEnv('MISACO_IRACE_PARAMS',''));
         if isempty(params)
@@ -36,6 +37,8 @@ function cost = RunIRACETrialFromEnv()
             fullfile(projectRoot,'irace','runs'));
         baselineRoot = ReadStringEnv('MISACO_IRACE_BASELINE_ROOT', ...
             fullfile(projectRoot,'MiSACOMSLS5','stats_01'));
+        baselineAggregate = ReadStringEnv('MISACO_IRACE_BASELINE_AGGREGATE', ...
+            'geometric');
         tau = ReadDoubleEnv('MISACO_IRACE_TAU',1e-6);
 
         configId = ReadStringEnv('MISACO_IRACE_CONFIG_ID','unknown_config');
@@ -55,15 +58,23 @@ function cost = RunIRACETrialFromEnv()
         RunEOPCCVExperiment(problemId,seed,maxFE,params(1),params(2), ...
             runRoot,1,algorithmName,params);
         candidateObj = ReadCandidateObjective(runRoot,problemId,seed);
-        baselineObj = ReadBaselineObjective(baselineRoot,problemId,seed);
+        if strcmp(seedSource,'instance')
+            baselineObj = ReadBaselineObjective(baselineRoot,problemId,seed);
+            baselineMode = 'matched-seed';
+        else
+            baselineObj = ReadBaselineReference( ...
+                baselineRoot,problemId,baselineAggregate,tau);
+            baselineMode = lower(strtrim(baselineAggregate));
+        end
 
         cost = log((candidateObj + tau)./(baselineObj + tau));
         if ~isfinite(cost)
             cost = 1e6;
         end
 
-        fprintf('IRACE_RESULT instance=F%d:%d candidate=%.16g baseline=%.16g tau=%.16g cost=%.16g\n', ...
-            problemId,seed,candidateObj,baselineObj,tau,cost);
+        fprintf(['IRACE_RESULT instance=F%d seed=%d seedSource=%s ' ...
+            'candidate=%.16g baseline=%.16g baselineMode=%s tau=%.16g cost=%.16g\n'], ...
+            problemId,seed,seedSource,candidateObj,baselineObj,baselineMode,tau,cost);
         WriteCostFile(costFile,cost);
         clear cleanup;
     catch err
@@ -111,24 +122,44 @@ function params = DefaultMiSACOMSLS5Params()
 end
 
 
-function [problemId, seed] = ParseIRACEInstance(instanceSpec)
+function [problemId, seed, seedSource] = ParseIRACEInstance(instanceSpec,iraceSeedRaw)
     instanceSpec = strtrim(char(instanceSpec));
-    token = regexp(instanceSpec,'^F?(\d+)\s*[:_,/-]\s*(?:seed)?\s*(\d+)$', ...
+    fixedToken = regexp(instanceSpec,'^F?(\d+)\s*[:_,/-]\s*(?:seed)?\s*(\d+)$', ...
         'tokens','once');
-    if isempty(token)
+    dynamicToken = regexp(instanceSpec,'^F?(\d+)$','tokens','once');
+
+    if ~isempty(fixedToken)
+        problemId = str2double(fixedToken{1});
+        seed = str2double(fixedToken{2});
+        seedSource = 'instance';
+    elseif ~isempty(dynamicToken)
+        problemId = str2double(dynamicToken{1});
+        seed = NormalizeIRACESeed(iraceSeedRaw);
+        seedSource = 'irace';
+    else
         error('RunIRACETrialFromEnv:InvalidInstance', ...
-            'IRACE instance must look like F12:3 or 12:3, got "%s".', instanceSpec);
+            'IRACE instance must look like F12 or F12:3, got "%s".', instanceSpec);
     end
 
-    problemId = str2double(token{1});
-    seed = str2double(token{2});
     if ~isfinite(problemId) || problemId < 1 || problemId > 30 || ...
-            ~isfinite(seed) || seed < 1
+            ~isfinite(seed) || seed < 0
         error('RunIRACETrialFromEnv:InvalidInstance', ...
             'Invalid problem/seed in IRACE instance "%s".', instanceSpec);
     end
     problemId = round(problemId);
     seed = round(seed);
+end
+
+
+function seed = NormalizeIRACESeed(rawValue)
+    rawValue = strtrim(char(rawValue));
+    seedValue = str2double(rawValue);
+    if isempty(rawValue) || ~isfinite(seedValue)
+        error('RunIRACETrialFromEnv:InvalidIRACESeed', ...
+            'IRACE seed must be numeric, got "%s".', rawValue);
+    end
+
+    seed = mod(round(seedValue),2^32);
 end
 
 
@@ -151,6 +182,42 @@ function value = ReadBaselineObjective(baselineRoot,problemId,seed)
     if ~isfinite(value)
         error('RunIRACETrialFromEnv:InvalidBaseline', ...
             'Baseline objective is not finite for F%d seed %d.', problemId, seed);
+    end
+end
+
+
+function value = ReadBaselineReference(baselineRoot,problemId,aggregate,tau)
+    instanceName = sprintf('F%d',problemId);
+    csvFile = fullfile(baselineRoot,instanceName,sprintf('stats.%s.csv',instanceName));
+    if ~isfile(csvFile)
+        error('RunIRACETrialFromEnv:MissingBaseline', ...
+            'Missing baseline CSV: %s', csvFile);
+    end
+
+    T = readtable(csvFile);
+    values = T.BestObjective(:);
+    values = values(isfinite(values));
+    if isempty(values) || any(values + tau <= 0)
+        error('RunIRACETrialFromEnv:InvalidBaseline', ...
+            'Baseline objectives are invalid for F%d.', problemId);
+    end
+
+    switch lower(strtrim(aggregate))
+        case {'geometric','geomean','log-mean'}
+            value = exp(mean(log(values + tau))) - tau;
+        case {'mean','arithmetic'}
+            value = mean(values);
+        case 'median'
+            value = median(values);
+        otherwise
+            error('RunIRACETrialFromEnv:InvalidBaselineAggregate', ...
+                ['MISACO_IRACE_BASELINE_AGGREGATE must be geometric, ' ...
+                'mean, or median; got "%s".'], aggregate);
+    end
+
+    if ~isfinite(value) || value + tau <= 0
+        error('RunIRACETrialFromEnv:InvalidBaseline', ...
+            'Baseline reference is invalid for F%d.', problemId);
     end
 end
 

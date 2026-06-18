@@ -26,13 +26,14 @@ export MATLAB_BIN="${MATLAB_BIN:-matlab}"
 export MISACO_MATLAB_SINGLE_COMP_THREAD="${MISACO_MATLAB_SINGLE_COMP_THREAD:-1}"
 export MISACO_PLATEMO_DIR="${MISACO_PLATEMO_DIR:-/data/home/exx866/Matlab/PlatEMO/PlatEMO}"
 export MISACO_IRACE_BASELINE_ROOT="${MISACO_IRACE_BASELINE_ROOT:-/data/home/exx866/Matlab/MiSACO-EOPCCV/MiSACOMSLS5/stats_01}"
-export MISACO_IRACE_STATS_ROOT="${MISACO_IRACE_STATS_ROOT:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/runs}"
-export MISACO_IRACE_LOG_DIR="${MISACO_IRACE_LOG_DIR:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/logs}"
-export MISACO_IRACE_COST_DIR="${MISACO_IRACE_COST_DIR:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/costs}"
+export MISACO_IRACE_BASELINE_AGGREGATE="${MISACO_IRACE_BASELINE_AGGREGATE:-geometric}"
+export MISACO_IRACE_STATS_ROOT="${MISACO_IRACE_STATS_ROOT:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/runs_allF_dynamic}"
+export MISACO_IRACE_LOG_DIR="${MISACO_IRACE_LOG_DIR:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/logs_allF_dynamic}"
+export MISACO_IRACE_COST_DIR="${MISACO_IRACE_COST_DIR:-/data/home/exx866/Matlab/MiSACO-EOPCCV/irace/costs_allF_dynamic}"
 export MISACO_IRACE_MAX_FE="${MISACO_IRACE_MAX_FE:-300}"
 export MISACO_IRACE_TAU="${MISACO_IRACE_TAU:-1e-6}"
 
 cd /data/home/exx866/Matlab/MiSACO-EOPCCV/irace
-mkdir -p logs costs runs
+mkdir -p logs_allF_dynamic costs_allF_dynamic runs_allF_dynamic
 
 Rscript run_irace.R

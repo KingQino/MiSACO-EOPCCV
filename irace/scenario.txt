@@ -1,4 +1,5 @@
 parameterFile = "./parameters.txt"
+configurationsFile = "./initial-configurations.txt"
 trainInstancesFile = "./instances_train.txt"
 targetRunner = "./target-runner.sh"
 execDir = "./"
@@ -7,7 +8,7 @@ maxExperiments = 1000
 minExperiments = 120
 firstTest = 8
 eachTest = 4
-logFile = "./irace.Rdata"
+logFile = "./irace_allF_dynamic.Rdata"
 
 # Parallel execution
 parallel = 96

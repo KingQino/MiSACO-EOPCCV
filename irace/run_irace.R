@@ -7,11 +7,13 @@ if (length(file_arg) > 0) {
   setwd(dirname(script_path))
 }
 
-message("Starting irace from elite configurations...")
+result_file <- readScenario("scenario.txt")$logFile
+
+message("Starting all-instance irace from elite configurations...")
 irace.cmdline("--scenario scenario.txt")
 
-if (file.exists("irace.Rdata")) {
-  load("irace.Rdata")
+if (file.exists(result_file)) {
+  load(result_file)
 
   best_id <- tail(iraceResults$iterationElites, 1)[[1]][1]
   best <- iraceResults$allConfigurations[best_id, ]

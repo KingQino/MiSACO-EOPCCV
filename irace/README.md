@@ -1,29 +1,39 @@
 # IRACE tuning for MiSACOMSLS5
 
-This directory contains a fixed-instance IRACE setup.  Each IRACE instance is
-`F<problem>:<seed>`, for example `F12:3`.  The target runner ignores the IRACE
-seed for the optimizer seed and instead uses the seed embedded in the instance
-string, so each trial can be paired with the existing MiSACOMSLS5 baseline.
+This directory tunes MiSACOMSLS5 on all 30 EOPCCV problems. Each IRACE
+instance is `F<problem>`, for example `F12`. The random seed supplied by IRACE
+is also used as the optimizer seed, so racing samples more than a fixed set of
+three seeds.
 
 The target value minimized by IRACE is:
 
 ```text
-log((candidateBestObjective + tau) / (baselineBestObjective + tau))
+log((candidateBestObjective + tau) / (baselineReference + tau))
 ```
 
-where `baselineBestObjective` is read from `MiSACOMSLS5/stats_01`.
-Negative values are better than the baseline, zero is equal, and positive
-values are worse than the baseline.
+where `baselineReference` is the geometric mean of the ten baseline results
+for that problem in `MiSACOMSLS5/stats_01` (computed in `objective + tau`
+space). Negative values are better than the baseline reference, zero is equal,
+and positive values are worse. Set `MISACO_IRACE_BASELINE_AGGREGATE` to
+`mean` or `median` to use another reference.
+
+For compatibility, a manually supplied instance such as `F12:3` still uses
+seed 3 and compares against baseline seed 3.
 
 ## Files
 
-- `instances_train.txt`: training instances, currently 9 selected problems
-  with seeds 1-3.
-- `instances_validation.txt`: matching validation instances with seeds 4-10.
+- `instances_train.txt`: all problems F1-F30; IRACE supplies the run seed.
+- `instances_validation.txt`: all problems F1-F30 for optional later testing.
+- `initial-configurations.txt`: five elites retained from the interrupted
+  468-experiment run.
 - `parameters.txt`: first-stage tuning space for 10 local-search parameters.
 - `scenario.txt`: minimal IRACE scenario.
 - `target-runner.sh`: IRACE target runner.
 - `RunIRACETrialFromEnv.m`: MATLAB wrapper called by the target runner.
+
+The all-instance run is saved as `irace_allF_dynamic.Rdata`. Its HPC artifacts
+go to `runs_allF_dynamic/`, `logs_allF_dynamic/`, and `costs_allF_dynamic/`, so
+an interrupted fixed-seed run remains untouched.
 
 ## Local smoke test
 
@@ -32,7 +42,7 @@ From the repository root:
 ```bash
 MATLAB_BIN=/Applications/MATLAB_R2024b.app/bin/matlab \
 MISACO_IRACE_MAX_FE=120 \
-irace/target-runner.sh 1 1 123 F12:1 \
+irace/target-runner.sh 1 1 123 F12 \
   --local-start-count 6 \
   --local-elite-pool 30 \
   --local-min-sample-factor 5 \
@@ -63,6 +73,7 @@ Useful environment overrides:
 export MATLAB_BIN=matlab
 export MISACO_PLATEMO_DIR=/path/to/PlatEMO/PlatEMO
 export MISACO_IRACE_BASELINE_ROOT=/path/to/MiSACOMSLS5/stats_01
+export MISACO_IRACE_BASELINE_AGGREGATE=geometric
 export MISACO_IRACE_STATS_ROOT=/path/to/irace/runs
 export MISACO_IRACE_LOG_DIR=/path/to/irace/logs
 export MISACO_IRACE_MAX_FE=600
@@ -76,9 +87,8 @@ builds exit silently when `-nodisplay` or `-singleCompThread` is combined with
 `-batch`.
 
 Increase `maxExperiments` in `scenario.txt` when running a serious tuning job.
-The current scenario uses `parallel = 128`, `loadBalancing = 1`, and
-`blockSize = 1`.  Make sure the IRACE job allocation has enough CPU and memory
-for 128 simultaneous MATLAB workers.  The provided `submit_irace.slurm`
-requests 128 CPUs and 3 GB per CPU.  For a first HPC pass, 300-600 experiments
-is a reasonable start.  Final validation should still run the selected
-configurations on F1-F30, seeds 1-10.
+The current scenario uses `parallel = 96`, `loadBalancing = 1`, and
+`blockSize = 1`. Make sure the IRACE job allocation has enough CPU and memory
+for 96 simultaneous MATLAB workers. The provided `submit_irace.slurm`
+requests 96 CPUs and 3 GB per CPU. Final validation should still run the
+selected configurations on F1-F30, seeds 1-10, with the full FE=600 budget.

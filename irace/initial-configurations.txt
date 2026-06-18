@@ -1,0 +1,6 @@
+localStartCount localElitePool localMinSampleFactor localNeighborCount localPredImproveTol localSwitchMargin localSwitchStartTol localGoodRate localBadRate localStagFE
+6 45 3 53 0.026 0.114 0.355 0.727 0.122 33
+4 61 3 60 0.028 0.083 0.335 0.774 0.112 44
+8 54 3 64 0.028 0.084 0.245 0.597 0.089 28
+7 68 3 48 0.033 0.070 0.372 0.773 0.284 24
+10 48 3 67 0.039 0.127 0.231 0.533 0.133 22
