@@ -26,16 +26,17 @@ seed 3 and compares against baseline seed 3.
 
 - `instances_train.txt`: all problems F1-F30; IRACE supplies the run seed.
 - `instances_validation.txt`: all problems F1-F30 for optional later testing.
-- `initial-configurations.txt`: five elites retained from the interrupted
-  468-experiment run.
+- `initial-configurations.txt`: the MSLS5 default, c12, c25, and five earlier
+  elites used to warm-start the FE=600 race.
 - `parameters.txt`: first-stage tuning space for 10 local-search parameters.
 - `scenario.txt`: minimal IRACE scenario.
 - `target-runner.sh`: IRACE target runner.
 - `RunIRACETrialFromEnv.m`: MATLAB wrapper called by the target runner.
 
-The all-instance run is saved as `irace_allF_dynamic.Rdata`. Its HPC artifacts
-go to `runs_allF_dynamic/`, `logs_allF_dynamic/`, and `costs_allF_dynamic/`, so
-an interrupted fixed-seed run remains untouched.
+The FE=600 all-instance run is saved as
+`irace_allF_dynamic_FE600.Rdata`. Its HPC artifacts go to
+`runs_allF_dynamic_FE600/`, `logs_allF_dynamic_FE600/`, and
+`costs_allF_dynamic_FE600/`, so earlier tuning runs remain untouched.
 
 ## Local smoke test
 

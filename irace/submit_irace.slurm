@@ -2,9 +2,9 @@
 
 # Slurm job options
 #SBATCH --partition=compute
-#SBATCH --job-name=MiSACOMSLS5-IRACE
-#SBATCH --output=irace.log
-#SBATCH --time=240:00:00
+#SBATCH --job-name=MSLS5-IRACE-FE600
+#SBATCH --output=irace_fe600.log
+#SBATCH --time=48:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=96
@@ -39,13 +39,13 @@ export MISACO_PLATEMO_DIR="${MISACO_PLATEMO_DIR:-/data/home/exx866/Matlab/PlatEM
 export MISACO_IRACE_BASELINE_ROOT="${MISACO_IRACE_BASELINE_ROOT:-$project_root/MiSACOMSLS5/stats_01}"
 export MISACO_IRACE_BASELINE_FILE="${MISACO_IRACE_BASELINE_FILE:-$irace_dir/baseline_references.csv}"
 export MISACO_IRACE_BASELINE_AGGREGATE="${MISACO_IRACE_BASELINE_AGGREGATE:-geometric}"
-export MISACO_IRACE_STATS_ROOT="${MISACO_IRACE_STATS_ROOT:-$irace_dir/runs_allF_dynamic}"
-export MISACO_IRACE_LOG_DIR="${MISACO_IRACE_LOG_DIR:-$irace_dir/logs_allF_dynamic}"
-export MISACO_IRACE_COST_DIR="${MISACO_IRACE_COST_DIR:-$irace_dir/costs_allF_dynamic}"
-export MISACO_IRACE_MAX_FE="${MISACO_IRACE_MAX_FE:-300}"
+export MISACO_IRACE_STATS_ROOT="${MISACO_IRACE_STATS_ROOT:-$irace_dir/runs_allF_dynamic_FE600}"
+export MISACO_IRACE_LOG_DIR="${MISACO_IRACE_LOG_DIR:-$irace_dir/logs_allF_dynamic_FE600}"
+export MISACO_IRACE_COST_DIR="${MISACO_IRACE_COST_DIR:-$irace_dir/costs_allF_dynamic_FE600}"
+export MISACO_IRACE_MAX_FE="${MISACO_IRACE_MAX_FE:-600}"
 export MISACO_IRACE_TAU="${MISACO_IRACE_TAU:-1e-6}"
 
 cd "$irace_dir"
-mkdir -p logs_allF_dynamic costs_allF_dynamic runs_allF_dynamic
+mkdir -p logs_allF_dynamic_FE600 costs_allF_dynamic_FE600 runs_allF_dynamic_FE600
 
 Rscript run_irace.R

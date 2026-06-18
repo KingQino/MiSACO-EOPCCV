@@ -5,7 +5,7 @@ localNeighborCount      "--local-neighbor-count "      i (30, 90)
 localPredImproveTol     "--local-pred-improve-tol "    r (0.005, 0.040)
 localSwitchMargin       "--local-switch-margin "       r (0.050, 0.180)
 localSwitchStartTol     "--local-switch-start-tol "    r (0.150, 0.600)
-localGoodRate           "--local-good-rate "           r (0.500, 0.850)
+localGoodRate           "--local-good-rate "           r (0.450, 0.850)
 localBadRate            "--local-bad-rate "            r (0.080, 0.300)
 localStagFE             "--local-stag-fe "             i (20, 55)
 

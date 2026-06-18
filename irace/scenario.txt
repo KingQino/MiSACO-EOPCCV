@@ -8,7 +8,7 @@ maxExperiments = 1000
 minExperiments = 120
 firstTest = 8
 eachTest = 4
-logFile = "./irace_allF_dynamic.Rdata"
+logFile = "./irace_allF_dynamic_FE600.Rdata"
 
 # Parallel execution
 parallel = 96

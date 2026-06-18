@@ -4,10 +4,17 @@ costs/
 runs_allF_dynamic/
 logs_allF_dynamic/
 costs_allF_dynamic/
+runs_allF_dynamic_FE600/
+logs_allF_dynamic_FE600/
+costs_allF_dynamic_FE600/
 *.Rdata
 *.Rout
 best-config.txt
 all-configs.csv
 last-generation.csv
 experiment-log.csv
+best-config-*.txt
+all-configs-*.csv
+last-generation-*.csv
+experiment-log-*.csv
 .DS_Store
