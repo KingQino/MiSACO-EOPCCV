@@ -2,7 +2,7 @@ function instanceSummary = RunEOPCCVExperiment(problemId, seeds, maxFE, parentN,
 %RunEOPCCVExperiment Run one EOPCCV problem for multiple random seeds.
 
     if nargin < 2 || isempty(seeds)
-        seeds = 1:10;
+        seeds = 1:20;
     end
     if nargin < 3 || isempty(maxFE)
         maxFE = 600;

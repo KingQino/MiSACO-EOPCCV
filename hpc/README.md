@@ -8,7 +8,7 @@ bash hpc/submit_array.sh
 ```
 
 By default, each array task runs one `(problem, seed)` pair. For 30
-problems and 10 seeds, this submits 300 array tasks. Results are written
+problems and 20 seeds, this submits 600 array tasks. Results are written
 under `<Algorithm>/<STATS_NAME>/F*/seed/`; by default this is
 `MiSACO/stats/F*/seed/`.
 
@@ -17,7 +17,7 @@ Useful overrides:
 ```bash
 MISACO_PLATEMO_DIR=/path/to/PlatEMO/PlatEMO \
 MISACO_MAX_FE=600 \
-MISACO_MAX_TRIALS=10 \
+MISACO_MAX_TRIALS=20 \
 STATS_NAME=stats_01 \
 MAX_PARALLEL=100 \
 MEM_PER_CPU=4G \
@@ -302,6 +302,16 @@ The submit script also starts a dependent collect job that writes:
 - `<Algorithm>/<STATS_NAME>/general.csv`
 - `<Algorithm>/<STATS_NAME>/general.mat`
 - `<Algorithm>/<STATS_NAME>/general.txt`
+- `<Algorithm>/<STATS_NAME>/statistics.csv`
+- `<Algorithm>/<STATS_NAME>/generate_statistics_csv.sh`
+
+`statistics.csv` contains `Instance,Min,Mean,Std,Runtime`, where Runtime is
+the mean runtime across completed seeds. To regenerate it manually:
+
+```bash
+cd <Algorithm>/<STATS_NAME>
+./generate_statistics_csv.sh
+```
 
 By default, each seed keeps compact outputs plus `history.*.mat`, which
 contains the full `History`, `EvalLog`, `SurLog`, and `RunSummary` structs.

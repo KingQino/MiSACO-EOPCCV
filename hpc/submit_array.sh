@@ -11,11 +11,12 @@ stats_name="${STATS_NAME:-stats}"
 sbatch_script="$repo_root/hpc/run_instance_array.sbatch"
 preflight_script="$repo_root/hpc/preflight_matlab.sbatch"
 collect_script="$repo_root/hpc/collect_results.sbatch"
+statistics_script="$repo_root/hpc/generate_statistics_csv.sh"
 
 mkdir -p "$log_dir"
 
 export MISACO_ARRAY_BASE="${MISACO_ARRAY_BASE:-0}"
-export MISACO_MAX_TRIALS="${MISACO_MAX_TRIALS:-10}"
+export MISACO_MAX_TRIALS="${MISACO_MAX_TRIALS:-20}"
 export MISACO_MAX_FE="${MISACO_MAX_FE:-600}"
 export MISACO_PARENT_N="${MISACO_PARENT_N:-60}"
 export MISACO_OFFSPRING_N="${MISACO_OFFSPRING_N:-100}"
@@ -57,6 +58,7 @@ if [[ ! -f "$algorithm_file" ]]; then
 fi
 
 mkdir -p "$MISACO_STATS_ROOT"
+install -m 755 "$statistics_script" "$MISACO_STATS_ROOT/generate_statistics_csv.sh"
 
 if [[ "$MISACO_ARRAY_MODE" == "seed" ]]; then
     array_max=$((30 * MISACO_MAX_TRIALS - 1))
@@ -121,6 +123,7 @@ echo "  MATLAB module: $MATLAB_MODULE"
 echo "  Startup stagger window: ${START_DELAY_SECONDS}s"
 echo "  Detailed per-seed logs: $MISACO_SAVE_DETAILED_LOGS"
 echo "  Stats root: $MISACO_STATS_ROOT"
+echo "  Statistics CSV: $MISACO_STATS_ROOT/statistics.csv"
 
 if [[ "${SUBMIT_COLLECT:-1}" == "1" ]]; then
     collect_job_id=$(sbatch \

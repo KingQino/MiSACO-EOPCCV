@@ -27,7 +27,7 @@ function RunEOPCCVHPC(varargin)
     end
 
     arrayBase   = ReadIntegerEnv('MISACO_ARRAY_BASE', 0);
-    maxTrials  = ReadIntegerEnv('MISACO_MAX_TRIALS', 10);
+    maxTrials  = ReadIntegerEnv('MISACO_MAX_TRIALS', 20);
     maxFE      = ReadIntegerEnv('MISACO_MAX_FE', 600);
     parentN    = ReadIntegerEnv('MISACO_PARENT_N', 60);
     offspringN = ReadIntegerEnv('MISACO_OFFSPRING_N', 100);

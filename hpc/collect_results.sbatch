@@ -31,3 +31,9 @@ echo "Working directory: $PWD"
 echo "MISACO_STATS_ROOT=$MISACO_STATS_ROOT"
 
 matlab -nodisplay -nosplash -nodesktop -singleCompThread -batch "CollectEOPCCVResults(getenv('MISACO_STATS_ROOT')); exit"
+
+statistics_script="$MISACO_STATS_ROOT/generate_statistics_csv.sh"
+if [[ ! -x "$statistics_script" ]]; then
+    install -m 755 "$PWD/hpc/generate_statistics_csv.sh" "$statistics_script"
+fi
+"$statistics_script"
