@@ -16,14 +16,6 @@ The competition uses the EOPCCV benchmark suite, consisting of 30 expensive mixe
 
 ASMLS-MiSACO was evaluated on all 30 EOPCCV benchmark problems.
 
-The experimental results include the minimum, mean, and standard deviation of the objective values, together with runtime statistics.
-
-| Benchmark | Number of Problems | Results |
-|---|---:|---|
-| Type 1 (F1–F10) | 10 | [View results](statistics.csv) |
-| Type 2 (F11–F20) | 10 | [View results](statistics.csv) |
-| Type 3 (F21–F30) | 10 | [View results](statistics.csv) |
-
 The complete experimental results are available in [`statistics.csv`](statistics.csv).
 
 ## Implementation
