@@ -17,13 +17,3 @@ The competition uses the EOPCCV benchmark suite, consisting of 30 expensive mixe
 ASMLS-MiSACO was evaluated on all 30 EOPCCV benchmark problems.
 
 The complete experimental results are available in [`statistics.csv`](statistics.csv).
-
-## Implementation
-
-ASMLS-MiSACO is implemented in MATLAB based on [PlatEMO](https://github.com/BIMK/PlatEMO).
-
-## Reference
-
-J. Liu, Y. Wang, G. Sun, and T. Pang, "Multisurrogate-Assisted Ant Colony Optimization for Expensive Optimization Problems With Continuous and Categorical Variables," *IEEE Transactions on Cybernetics*, vol. 52, no. 11, pp. 11348–11361, 2022.
-
-DOI: [10.1109/TCYB.2021.3064676](https://doi.org/10.1109/TCYB.2021.3064676)
