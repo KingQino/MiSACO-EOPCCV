@@ -1,4 +1,4 @@
-# ASMLS-MiSACO
+# Expensive mixed-variable optimization problem
 
 We propose **ASMLS-MiSACO**, an adaptive surrogate-guided multi-start local-search enhancement of MiSACO for expensive mixed-variable optimization problems involving continuous and categorical decision variables.
 
