@@ -1,19 +1,23 @@
-# MiSACO-and-EOPCCV
-The full name of MiSACO is "Multisurrogate-Assisted Ant Colony Optimization". It is designed for expensive optimization problems with continuous and categorical variables.
+# ASMLS-MiSACO
 
-EOPCCV contains 30 synthetic mixed-variable benchmark problems: EOPCCV-F1~EOPCCV-F30. These benchmarks are grouped into three categories, each comprising 10 decision variables:
-1) Type 1 (EOPCCV-F1~EOPCCV-F10): 8 continuous + 2 categorical variables
-2) Type 2 (EOPCCV-F11~EOPCCV-F20): 5 continuous + 5 categorical variables
-3) Type 3 (EOPCCV-F21~EOPCCV-F30): 2 continuous + 8 categorical variables
+We propose **ASMLS-MiSACO**, an adaptive surrogate-guided multi-start local-search enhancement of MiSACO for expensive mixed-variable optimization problems involving continuous and categorical decision variables.
 
-MiSACO and EOPCCV are implemented in Matlab based on PlatEMO 4.X (https://github.com/BIMK/PlatEMO) and are released in PlatEMO.
+Our algorithm achieved **3rd place in the Traditional Evolutionary Algorithms track** of the [IEEE WCCI 2026 Competition on Expensive Mixed-Variable Optimization](https://liuj-2023.github.io/WCCI2026-Competition/).
 
-@ARTICLE{9464165,
-  author={Liu, Jiao and Wang, Yong and Sun, Guangyong and Pang, Tong},
-  journal={IEEE Transactions on Cybernetics}, 
-  title={Multisurrogate-Assisted Ant Colony Optimization for Expensive Optimization Problems With Continuous and Categorical Variables}, 
-  year={2022},
-  volume={52},
-  number={11},
-  pages={11348-11361},
-  doi={10.1109/TCYB.2021.3064676}}
+## Benchmark
+
+The competition uses the EOPCCV benchmark suite, consisting of 30 expensive mixed-variable optimization problems:
+
+- **EOPCCV-F1–F10:** 8 continuous + 2 categorical variables
+- **EOPCCV-F11–F20:** 5 continuous + 5 categorical variables
+- **EOPCCV-F21–F30:** 2 continuous + 8 categorical variables
+
+## Implementation
+
+ASMLS-MiSACO is implemented in MATLAB based on [PlatEMO](https://github.com/BIMK/PlatEMO).
+
+## Reference
+
+J. Liu, Y. Wang, G. Sun, and T. Pang, "Multisurrogate-Assisted Ant Colony Optimization for Expensive Optimization Problems With Continuous and Categorical Variables," *IEEE Transactions on Cybernetics*, vol. 52, no. 11, pp. 11348–11361, 2022.
+
+DOI: [10.1109/TCYB.2021.3064676](https://doi.org/10.1109/TCYB.2021.3064676)
